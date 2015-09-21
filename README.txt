@@ -1,14 +1,11 @@
 如何修改代码：
 
-0、到https://github.com/ysl2007/Eline，单击页面右上方的Fork，将代码复制到自己的repo中。
-1、clone https://github.com/[your_username]/Eline.git到本地目录
-2、创建分支、修改代码、add所有文件、commit提交
-3、将新的分支push到github远程代码库中
-4、到自己的github的该report主页，点击Pull request，在head fork中选择自己用户的代码库，compare中选择最新的分支，然后提交Pull request。
+甲拥有repository，想要B也能更新自己的repository，就把B加入collaborators（已添加黄老师）。
 
-远程代码库更新之后，更新自己fork到的代码：
-0、提交自己代码库的所有修改
-1、添加远程仓库：git remote add newVersion git://github.com/base_fork/name.git
-2、fetch远程代码库的新版本到本地：git fetch newVersion
-3、合并分支：git merge newVersion/master
-4、push到自己的远程代码库：git push
+乙初始化的時候， 注意clone URL 是甲的 repo 的 clone URL，即https://github.com/ysl2007/ElineProject.git
+乙在本机添加分支、修改代码（branch、commit、merge）。
+乙在本机push时，可以使用自己的账号密码。
+如此操作会更新甲的repository（甲仍就可以继续更新自己的repository）
+但乙自己的github账户並不會有一份和甲相同的repository（只会有甲的repo链接）
+
+如此不必再使用Fork + Pull request
