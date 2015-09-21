@@ -20,16 +20,8 @@ import edu.bit.eline.detection.Color;
 import edu.bit.eline.recognise.feature.ExtractFeature;
 import edu.bit.eline.recognise.svm.ImageClassification;
 
-import javax.swing.JFrame;
-
 import java.awt.Dimension;
 import java.awt.image.BufferedImage;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
 
 public class Eline {
 

@@ -1,4 +1,4 @@
-package edu.bit.eline.system;
+package edu.bit.eline.demo;
 
 import java.awt.Graphics;
 import java.awt.Image;
