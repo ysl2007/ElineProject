@@ -1,5 +1,5 @@
 package edu.bit.eline.recognise.feature;
-//格式转换类，转换成SVM需要的格式
+//鏍煎紡杞崲绫伙紝杞崲鎴怱VM闇�瑕佺殑鏍煎紡
 public class Record {
 	
 	

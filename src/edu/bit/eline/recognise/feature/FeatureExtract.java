@@ -80,7 +80,7 @@ public class FeatureExtract {
 			BufferedImage subimg= null;
 		    String [] arrs;
 			subimg=bi.getSubimage(lefttopx, lefttopy, rightlowx-lefttopx, rightlowy-lefttopy);
-			ImageIO.write(subimg,"JPEG",new File("E:/电网项目/train/classes/"+aa.getobjType()+"/"+aa.getfileName()+".sub.jpg"));
+			ImageIO.write(subimg,"JPEG",new File("E:/鐢电綉椤圭洰/train/classes/"+aa.getobjType()+"/"+aa.getfileName()+".sub.jpg"));
 		 	 ac.extract(subimg);
 		 	 features=features+"AutoColorCorrelogram: "+ac.getStringRepresentation()+";\n";
 		 	 arrs=ac.getStringRepresentation().split(" "); 
@@ -155,10 +155,10 @@ public class FeatureExtract {
 	public static void main(String[] args) {
 		
 		FeatureExtract fe=new FeatureExtract();
-	// 	fe.format("E:/电网项目/train/1.features", "E:/电网项目/train/111.features.format");
-	    String [] filelist=fe.getFileList("E:/电网项目/train/2");
+	// 	fe.format("E:/鐢电綉椤圭洰/train/1.features", "E:/鐢电綉椤圭洰/train/111.features.format");
+	    String [] filelist=fe.getFileList("E:/鐢电綉椤圭洰/train/2");
 		 try {
-			    BufferedWriter outFile = new BufferedWriter(new FileWriter("E:/电网项目/train/111112.features"));
+			    BufferedWriter outFile = new BufferedWriter(new FileWriter("E:/鐢电綉椤圭洰/train/111112.features"));
 			    
 			    for(int i=0;i<filelist.length;i++){
 			    	 AnnotationAnalysis aa=new AnnotationAnalysis(filelist[i]);
@@ -180,9 +180,9 @@ public class FeatureExtract {
              e.printStackTrace();
 		 } 
 		 /*
-		 filelist=fe.getFileList("E:/电网项目/train/2");
+		 filelist=fe.getFileList("E:/鐢电綉椤圭洰/train/2");
 		 try {
-			    BufferedWriter outFile = new BufferedWriter(new FileWriter("E:/电网项目/train/2.features"));
+			    BufferedWriter outFile = new BufferedWriter(new FileWriter("E:/鐢电綉椤圭洰/train/2.features"));
 			    
 			    for(int i=0;i<filelist.length;i++){
 			    	 AnnotationAnalysis aa=new AnnotationAnalysis(filelist[i]);

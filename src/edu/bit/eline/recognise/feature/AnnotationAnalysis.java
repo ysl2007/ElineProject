@@ -6,7 +6,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-// ±ê×¢·ÖÎöÀà
+// æ ‡æ³¨åˆ†æç±»
 public class AnnotationAnalysis {
 	private  String fileName;
 	private  String shootTime;
@@ -104,7 +104,7 @@ public class AnnotationAnalysis {
 	 return this.lineName;
 	}
     public static void main(String[] args){
-    	AnnotationAnalysis aa=new AnnotationAnalysis("E:/µçÍøÏîÄ¿/train/train/1/2013-04-04ÃÅ±¦Ò»¶ş8/ÃÅ±¦Ò»¶ş8_20130404_120828_T_CH1_P1.jpg.txt");
+    	AnnotationAnalysis aa=new AnnotationAnalysis("E:/ç”µç½‘é¡¹ç›®/train/train/1/2013-04-04é—¨å®ä¸€äºŒ8/é—¨å®ä¸€äºŒ8_20130404_120828_T_CH1_P1.jpg.txt");
         System.out.println(aa.getRect());
     }
 }

@@ -115,7 +115,7 @@ public class ExtractFeature {
 		else
 		 return null;
 	}
-	// ÌáÈ¡Ò»¸öÍ¼ÏñµÄÌØÕ÷
+	// æå–ä¸€ä¸ªå›¾åƒçš„ç‰¹å¾
 	public String extractIMGfeature(BufferedImage subimg)
 	{
 		 AutoColorCorrelogram ac=new AutoColorCorrelogram();
@@ -151,7 +151,7 @@ public class ExtractFeature {
 			}
 	}
 	
-	// ÌáÈ¡Ò»¸öÍ¼ÏñµÄÌØÕ÷
+	// æå–ä¸€ä¸ªå›¾åƒçš„ç‰¹å¾
 	public String extractIMGfeature(String filepath)
 	{
 		 AutoColorCorrelogram ac=new AutoColorCorrelogram();
@@ -218,7 +218,7 @@ public class ExtractFeature {
 		}
 		return result;
 	}
- //ÌáÈ¡Ò»¸öÎÄ¼þ¼ÐÏÂËùÓÐÎÄ¼þµÄÌØÕ÷£¬ÎÄ¼þ¼ÐÏÂµÄ×ÓÎÄ¼þ¼ÐÊÇ×ÓÀà£¬°üÀ¨crane,pump,tower,diggerLoader,fog
+ //æå–ä¸€ä¸ªæ–‡ä»¶å¤¹ä¸‹æ‰€æœ‰æ–‡ä»¶çš„ç‰¹å¾ï¼Œæ–‡ä»¶å¤¹ä¸‹çš„å­æ–‡ä»¶å¤¹æ˜¯å­ç±»ï¼ŒåŒ…æ‹¬crane,pump,tower,diggerLoader,fog
 	public int extractFoldfeature(String foldpath,String featurefilepath)
 	{		
 				
@@ -276,7 +276,7 @@ public class ExtractFeature {
 	}
 	public static void main(String[] args){
 		ExtractFeature ef=new ExtractFeature();
-		//ef.generateSubImg("E:/µçÍøÏîÄ¿/train/2", "E:/µçÍøÏîÄ¿/train/classes");
-		ef.extractFoldfeature("E:/µçÍøÏîÄ¿/train/classes", "E:/µçÍøÏîÄ¿/train/feature.feature");
+		//ef.generateSubImg("E:/ç”µç½‘é¡¹ç›®/train/2", "E:/ç”µç½‘é¡¹ç›®/train/classes");
+		ef.extractFoldfeature("E:/ç”µç½‘é¡¹ç›®/train/classes", "E:/ç”µç½‘é¡¹ç›®/train/feature.feature");
 	}
 }
