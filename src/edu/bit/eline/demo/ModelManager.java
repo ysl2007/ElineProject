@@ -119,7 +119,7 @@ public class ModelManager extends JFrame {
         setTitle("Model Manager");
         setVisible(true);
         setResizable(true);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
     }
 
     private boolean refreshCameraList() {
@@ -138,7 +138,7 @@ public class ModelManager extends JFrame {
         return true;
     }
 
-    public static void main(String[] args) {
-        new ModelManager();
-    }
+//    public static void main(String[] args) {
+//        new ModelManager();
+//    }
 }

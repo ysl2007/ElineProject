@@ -4,7 +4,7 @@ import java.awt.Graphics;
 import java.awt.Image;
 import javax.swing.JPanel;
 
-public class ImgPanel extends JPanel {
+public class ImgPanelTest extends JPanel {
     private static final long serialVersionUID = 1L;
     private Image             image;
     private int               imgWidth;
@@ -30,12 +30,14 @@ public class ImgPanel extends JPanel {
         this.imgHeight = imgHeight;
     }
 
-    public ImgPanel() {
+    public ImgPanelTest() {
     }
 
     public void setImage(Image img) {
         if (null != img) {
             image = img;
+            double scale = Math.min((double)this.getWidth() / image.getWidth(this), (double)this.getHeight() / image.getHeight(this));
+            image = image.getScaledInstance((int)(image.getWidth(this) * scale), (int)(image.getHeight(this) * scale), Image.SCALE_DEFAULT);
             setImgWidth(image.getWidth(this));
             setImgHeight(image.getHeight(this));
         }
@@ -51,7 +53,11 @@ public class ImgPanel extends JPanel {
             return;
         }
 
-        g.drawImage(image, x, y, image.getWidth(this), image.getHeight(this), this);
+        g.drawImage(image, x, y, this.getWidth(), this.getHeight(), this);
         g = null;
+    }
+    
+    public static void main(String[] args) {
+        
     }
 }
