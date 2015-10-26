@@ -15,9 +15,7 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.List;
-import java.util.Stack;
 
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
@@ -48,7 +46,7 @@ import edu.bit.eline.detection.ImageConverter;
 import edu.bit.eline.recognise.feature.ExtractFeature;
 import edu.bit.eline.recognise.svm.ImageClassification;
 
-public class DemoPanel extends JFrame {
+public class DemoPanelOld extends JFrame {
     private static final long serialVersionUID = -8054742885149944542L;
 
     private Params            param;
@@ -61,11 +59,9 @@ public class DemoPanel extends JFrame {
     private JPanel            westPanel;
     private JPanel            westTopPanel;
     private JButton           browse;
-    private JButton           runDemo;
+    private JButton           run;
     private JButton           getTree;
     private JButton           modelManager;
-    private JButton           runLine;
-    private JButton           runAll;
     private ImagePanel        imagePanel;
     private Container         container;
     private JSplitPane        bottomPanel;
@@ -138,7 +134,7 @@ public class DemoPanel extends JFrame {
         }
     }
 
-    public DemoPanel() {
+    public DemoPanelOld() {
         param = new Params();
         setupGUI();
     }
@@ -147,7 +143,6 @@ public class DemoPanel extends JFrame {
         container = new JPanel();
         container.setLayout(new BoxLayout(container, BoxLayout.Y_AXIS));
 
-        // 左上角浏览文件夹部分
         dir = new JTextField("e:/example/5");
         dir.setColumns(20);
         browse = new JButton("Browse");
@@ -169,7 +164,6 @@ public class DemoPanel extends JFrame {
         topLeft.add(Box.createVerticalStrut(5));
         topLeft.setPreferredSize(new Dimension(150, 10));
 
-        // 右上角参数选择、运行
         topRight = new JPanel();
         topRight.setLayout(new BoxLayout(topRight, BoxLayout.Y_AXIS));
         topRight.add(Box.createVerticalStrut(5));
@@ -191,14 +185,14 @@ public class DemoPanel extends JFrame {
         minArea.setText("4000");
         minArea.setColumns(5);
         topRightArea.add(minArea);
-        runDemo = new JButton("运行");
-        runDemo.addActionListener(new ActionListener() {
+        run = new JButton("Run");
+        run.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent arg0) {
-                runButtomDemo();
+                runButtom();
             }
         });
-        topRightArea.add(runDemo);
+        topRightArea.add(run);
         topRight.add(topRightArea);
         topRight.add(Box.createVerticalStrut(5));
 
@@ -209,52 +203,27 @@ public class DemoPanel extends JFrame {
         topPanel.add(topRight);
         topPanel.setEnabled(false);
 
-        // 左边设备树及各个按钮
-        getTree = new JButton("获取摄像头树");
+        getTree = new JButton("Obtain camera tree");
         getTree.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (!getCameraTreeDemo()) {
-                    JOptionPane.showMessageDialog(null, "获取设备树失败。", "发生错误", JOptionPane.WARNING_MESSAGE);
+                    JOptionPane.showMessageDialog(null, "Failed to obtain camera tree.");
                 }
             }
         });
         getTree.setAlignmentX(CENTER_ALIGNMENT);
         getTree.setMinimumSize(new Dimension(160, 30));
 
-        runLine = new JButton("运行所选");
-        runLine.setAlignmentX(CENTER_ALIGNMENT);
-        runLine.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // TODO Auto-generated method stub
-
-            }
-        });
-
-        runAll = new JButton("运行所有");
-        runAll.setAlignmentX(CENTER_ALIGNMENT);
-        runAll.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // TODO Auto-generated method stub
-
-            }
-        });
-
-        modelManager = new JButton("模型管理器");
+        modelManager = new JButton("Model Manager");
         modelManager.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // TreeModel tree = treePanel.getModel();
-                DefaultMutableTreeNode tree = (DefaultMutableTreeNode) treePanel.getModel().getRoot();
-                List<String> cameraList = getAllLeaf(tree);
-                new ModelManager(cameraList);
+                new ModelManager(null);
             }
         });
         modelManager.setAlignmentX(CENTER_ALIGNMENT);
 
-        // 左边按钮部分
         westTopPanel = new JPanel();
         westTopPanel.setBorder(BorderFactory.createEtchedBorder());
         westTopPanel.setLayout(new BoxLayout(westTopPanel, BoxLayout.Y_AXIS));
@@ -276,7 +245,6 @@ public class DemoPanel extends JFrame {
             }
         });
 
-        // 整个左边
         westPanel = new JPanel();
         GridBagLayout gb = new GridBagLayout();
         westPanel.setLayout(gb);
@@ -296,14 +264,12 @@ public class DemoPanel extends JFrame {
         gbCon.weighty = 1;
         gb.setConstraints(treePanel, gbCon);
 
-        // 中部
         imagePanel = new ImagePanel();
         centerPanel = new JScrollPane();
         centerPanel.add(imagePanel);
         centerPanel.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         centerPanel.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 
-        // 整个下部
         bottomPanel = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         bottomPanel.setBorder(BorderFactory.createEmptyBorder());
         bottomPanel.setLeftComponent(westPanel);
@@ -314,7 +280,7 @@ public class DemoPanel extends JFrame {
         container.add(topPanel, BorderLayout.NORTH);
         container.add(bottomPanel, BorderLayout.CENTER);
 
-        finalSettings();
+        finalSetting();
     }
 
     protected boolean getCameraTree() {
@@ -354,7 +320,7 @@ public class DemoPanel extends JFrame {
         return imgList;
     }
 
-    protected void runButtomDemo() {
+    protected void runButtom() {
         varThrsh.setEditable(false);
         minArea.setEditable(false);
         alpha.setEditable(false);
@@ -398,27 +364,7 @@ public class DemoPanel extends JFrame {
         return true;
     }
 
-    private List<String> getAllLeaf(DefaultMutableTreeNode tree) {
-        ArrayList<String> retList = new ArrayList<String>();
-        Stack<DefaultMutableTreeNode> stack = new Stack<DefaultMutableTreeNode>();
-        stack.push(tree);
-        while (!stack.empty()) {
-            DefaultMutableTreeNode tnode = stack.pop();
-            @SuppressWarnings("unchecked")
-            Enumeration<DefaultMutableTreeNode> e = tnode.children();
-            while (e.hasMoreElements()) {
-                DefaultMutableTreeNode child = e.nextElement();
-                if (child.isLeaf()) {
-                    retList.add((String) child.getUserObject());
-                } else {
-                    stack.add(child);
-                }
-            }
-        }
-        return retList;
-    }
-
-    private void finalSettings() {
+    private void finalSetting() {
         this.setContentPane(container);
         setSize(1290, 800);
         setTitle("Demo");
@@ -428,6 +374,7 @@ public class DemoPanel extends JFrame {
     }
 
     public static void main(String[] args) {
-        new DemoPanel();
+        new DemoPanelOld();
     }
+
 }
