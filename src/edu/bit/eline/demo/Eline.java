@@ -1,4 +1,4 @@
-package edu.bit.eline.system;
+package edu.bit.eline.demo;
 
 import static org.bytedeco.javacpp.opencv_highgui.cvLoadImage;
 

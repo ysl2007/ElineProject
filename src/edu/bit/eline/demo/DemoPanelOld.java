@@ -49,7 +49,7 @@ import edu.bit.eline.recognise.svm.ImageClassification;
 public class DemoPanelOld extends JFrame {
     private static final long serialVersionUID = -8054742885149944542L;
 
-    private Params            param;
+    private ParamsDemo            param;
     private Detection         detection;
 
     private JTree             treePanel;
@@ -77,9 +77,9 @@ public class DemoPanelOld extends JFrame {
         private ImageConverter      converter;
         private ExtractFeature      ef;
         private ImageClassification ic;
-        private Params              param;
+        private ParamsDemo              param;
 
-        public Detection(Params param) {
+        public Detection(ParamsDemo param) {
             this.param = param;
             detector = new Detector(0, param.varThrshVal);
             analyzer = new BlobAnalyzer(param.minAreaVal);
@@ -135,7 +135,7 @@ public class DemoPanelOld extends JFrame {
     }
 
     public DemoPanelOld() {
-        param = new Params();
+        param = new ParamsDemo();
         setupGUI();
     }
 

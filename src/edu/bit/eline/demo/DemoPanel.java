@@ -51,7 +51,7 @@ import edu.bit.eline.recognise.svm.ImageClassification;
 public class DemoPanel extends JFrame {
     private static final long serialVersionUID = -8054742885149944542L;
 
-    private Params            param;
+    private ParamsDemo        param;
     private Detection         detection;
 
     private JTree             treePanel;
@@ -69,7 +69,7 @@ public class DemoPanel extends JFrame {
     private ImagePanel        imagePanel;
     private Container         container;
     private JSplitPane        bottomPanel;
-    private JTextField        dir;
+    private JTextField        dirField;
     private JTextField        varThrsh;
     private JTextField        minArea;
     private JTextField        alpha;
@@ -81,9 +81,9 @@ public class DemoPanel extends JFrame {
         private ImageConverter      converter;
         private ExtractFeature      ef;
         private ImageClassification ic;
-        private Params              param;
+        private ParamsDemo          param;
 
-        public Detection(Params param) {
+        public Detection(ParamsDemo param) {
             this.param = param;
             detector = new Detector(0, param.varThrshVal);
             analyzer = new BlobAnalyzer(param.minAreaVal);
@@ -105,7 +105,8 @@ public class DemoPanel extends JFrame {
                     bimg = ImageIO.read(new File(imgFilename));
                 } catch (IOException e) {
                     e.printStackTrace();
-                    System.err.println("Failed to open image file: " + imgFilename);
+                    System.err.println("Failed to open image file: "
+                            + imgFilename);
                     continue;
                 }
                 if (bimg == null)
@@ -118,17 +119,21 @@ public class DemoPanel extends JFrame {
                 Color color = new Color(255, 0, 0);
                 for (Blob blob : blobList) {
                     CvRect rect = blob.getRect();
-                    BufferedImage subimg = bimg.getSubimage(rect.x(), rect.y(), rect.width(), rect.height());
+                    BufferedImage subimg = bimg.getSubimage(rect.x(), rect.y(),
+                            rect.width(), rect.height());
                     String feature = ef.extractIMGfeature(subimg);
                     // String label = ic.classifyOneImg("1 " + feature);
-                    String label = ic.classifyOneImg("4 " + feature, ".\\config\\models\\model0.0.4.0.model", ".\\config\\models\\scale.params");
+                    String label = ic.classifyOneImg("4 " + feature,
+                            ".\\config\\default\\model0.0.4.0.model",
+                            ".\\config\\default\\scale.params");
                     if (!label.equals("0.0"))
                         imgMat = blob.drawRect(imgMat, color);
                 }
                 BufferedImage imgProcessed = converter.convert2JavaImg(imgMat);
                 imagePanel.setImage(imgProcessed);
                 centerPanel.setViewportView(imagePanel);
-                imagePanel.setPreferredSize(new Dimension(imgProcessed.getWidth(), imgProcessed.getHeight()));
+                imagePanel.setPreferredSize(new Dimension(imgProcessed
+                        .getWidth(), imgProcessed.getHeight()));
                 try {
                     Thread.sleep(500);
                 } catch (InterruptedException e) {
@@ -139,7 +144,7 @@ public class DemoPanel extends JFrame {
     }
 
     public DemoPanel() {
-        param = new Params();
+        param = new ParamsDemo();
         setupGUI();
     }
 
@@ -148,8 +153,8 @@ public class DemoPanel extends JFrame {
         container.setLayout(new BoxLayout(container, BoxLayout.Y_AXIS));
 
         // 左上角浏览文件夹部分
-        dir = new JTextField("e:/example/5");
-        dir.setColumns(20);
+        dirField = new JTextField("e:/example/5");
+        dirField.setColumns(20);
         browse = new JButton("Browse");
         browse.addActionListener(new ActionListener() {
             @Override
@@ -164,7 +169,7 @@ public class DemoPanel extends JFrame {
         JPanel topLeftButton = new JPanel();
         topLeftButton.setLayout(new FlowLayout());
         topLeftButton.add(browse);
-        topLeftButton.add(dir);
+        topLeftButton.add(dirField);
         topLeft.add(topLeftButton);
         topLeft.add(Box.createVerticalStrut(5));
         topLeft.setPreferredSize(new Dimension(150, 10));
@@ -215,14 +220,15 @@ public class DemoPanel extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (!getCameraTreeDemo()) {
-                    JOptionPane.showMessageDialog(null, "获取设备树失败。", "发生错误", JOptionPane.WARNING_MESSAGE);
+                    JOptionPane.showMessageDialog(null, "获取设备树失败。", "发生错误",
+                            JOptionPane.WARNING_MESSAGE);
                 }
             }
         });
         getTree.setAlignmentX(CENTER_ALIGNMENT);
         getTree.setMinimumSize(new Dimension(160, 30));
 
-        runLine = new JButton("运行所选");
+        runLine = new JButton("运行所选线路");
         runLine.setAlignmentX(CENTER_ALIGNMENT);
         runLine.addActionListener(new ActionListener() {
             @Override
@@ -232,7 +238,7 @@ public class DemoPanel extends JFrame {
             }
         });
 
-        runAll = new JButton("运行所有");
+        runAll = new JButton("运行所有线路");
         runAll.setAlignmentX(CENTER_ALIGNMENT);
         runAll.addActionListener(new ActionListener() {
             @Override
@@ -247,7 +253,8 @@ public class DemoPanel extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 // TreeModel tree = treePanel.getModel();
-                DefaultMutableTreeNode tree = (DefaultMutableTreeNode) treePanel.getModel().getRoot();
+                DefaultMutableTreeNode tree = (DefaultMutableTreeNode) treePanel
+                        .getModel().getRoot();
                 List<String> cameraList = getAllLeaf(tree);
                 new ModelManager(cameraList);
             }
@@ -262,6 +269,10 @@ public class DemoPanel extends JFrame {
         westTopPanel.add(getTree);
         westTopPanel.add(Box.createVerticalStrut(5));
         westTopPanel.add(modelManager);
+        westTopPanel.add(Box.createVerticalStrut(5));
+        westTopPanel.add(runLine);
+        westTopPanel.add(Box.createVerticalStrut(5));
+        westTopPanel.add(runAll);
         westTopPanel.add(Box.createVerticalStrut(5));
 
         treePanel = new JTree();
@@ -300,8 +311,10 @@ public class DemoPanel extends JFrame {
         imagePanel = new ImagePanel();
         centerPanel = new JScrollPane();
         centerPanel.add(imagePanel);
-        centerPanel.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-        centerPanel.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        centerPanel
+                .setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        centerPanel
+                .setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 
         // 整个下部
         bottomPanel = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
@@ -333,9 +346,9 @@ public class DemoPanel extends JFrame {
 
     protected List<String> getImgList() {
         List<String> imgList = new ArrayList<String>();
-        String path = dir.getText();
+        String path = dirField.getText();
         File directory = new File(path);
-        dir.setText(directory.getAbsolutePath());
+        dirField.setText(directory.getAbsolutePath());
         File[] imgInDir = directory.listFiles(new FilenameFilter() {
             @Override
             public boolean accept(File arg0, String arg1) {
@@ -366,13 +379,17 @@ public class DemoPanel extends JFrame {
         alpha.setEditable(true);
     }
 
+    protected void runLine(String lineName) {
+        new Thread(detection).start();
+    }
+
     protected void browseButton() {
         JFileChooser dirChooser = new JFileChooser();
         dirChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
         int returnVal = dirChooser.showOpenDialog(null);
         if (returnVal == JFileChooser.APPROVE_OPTION) {
             String selectedDir = dirChooser.getSelectedFile().getAbsolutePath();
-            dir.setText(selectedDir);
+            dirField.setText(selectedDir);
         }
     }
 

@@ -1,4 +1,4 @@
-package edu.bit.eline.demo;
+package edu.bit.eline.system;
 
 import java.awt.BorderLayout;
 import java.awt.Container;
