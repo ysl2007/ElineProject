@@ -17,7 +17,7 @@ public class TrainHelper {
     public static final int     PARAMS_OPTIMIZED   = 5;
     public static final int     MODEL_TRAINED      = 6;
 
-    private String              configPath         = ".\\config\\";
+    private final String        configPath         = ".\\config\\";
     private String              rootPath;
     private String              imagespath;
     private String              tempPath;
@@ -36,8 +36,8 @@ public class TrainHelper {
     private ImageClassification ic;
     private double              c;
     private double              g;
-    private String[]            classes = {"0.0", "0.0"};
-    public int                  status             = -1;
+    private String[]            classes            = { "0.0", "0.0" };
+    private int                  status             = -1;
 
     public TrainHelper(String lineName, String posClass) {
         rootPath = configPath + lineName + "\\";
@@ -60,6 +60,10 @@ public class TrainHelper {
         status = 0;
     }
 
+    public int getStatus(){
+        return status;
+    }
+    
     public void getDirsReady() {
         File dir;
         dir = new File(rootPath);
@@ -67,7 +71,7 @@ public class TrainHelper {
             dir.mkdir();
         dir = new File(tempPath);
         if (!dir.exists())
-            System.out.println(dir.mkdir());
+            dir.mkdir();
         dir = new File(imagespath);
         if (!dir.exists())
             dir.mkdir();
@@ -115,16 +119,15 @@ public class TrainHelper {
         status = 6;
     }
 
-    // public static void main(String[] args) {
-    // String result =
-    // "Best C: 2.0 Best G: 0.00390625 Best Acc: 0.9974358677864075";
-    // int idx1 = result.indexOf(':') + 2;
-    // int idx2 = result.indexOf(' ', idx1);
-    // double c = Double.valueOf(result.substring(idx1, idx2));
-    // idx1 = result.indexOf(':', idx2) + 2;
-    // idx2 = result.indexOf(' ', idx1);
-    // double g = Double.valueOf(result.substring(idx1, idx2));
-    // String params = "-t 2 -c " + c + " -g " + g;
-    // System.out.println(params);
-    // }
+//    public static void main(String[] args) {
+//        String result = "Best C: 2.0 Best G: 0.00390625 Best Acc: 0.9974358677864075";
+//        int idx1 = result.indexOf(':') + 2;
+//        int idx2 = result.indexOf(' ', idx1);
+//        double c = Double.valueOf(result.substring(idx1, idx2));
+//        idx1 = result.indexOf(':', idx2) + 2;
+//        idx2 = result.indexOf(' ', idx1);
+//        double g = Double.valueOf(result.substring(idx1, idx2));
+//        String params = "-t 2 -c " + c + " -g " + g;
+//        System.out.println(params);
+//    }
 }

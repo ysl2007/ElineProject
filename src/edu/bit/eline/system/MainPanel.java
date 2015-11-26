@@ -1,14 +1,14 @@
 package edu.bit.eline.system;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
 import java.awt.Container;
-import java.awt.Dimension;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
+import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
@@ -19,44 +19,79 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JSplitPane;
-import javax.swing.JTextField;
 import javax.swing.JTree;
+import javax.swing.event.TreeSelectionEvent;
+import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
+
+import edu.bit.eline.detection.Detector;
+import edu.bit.eline.system.run.ImageStorage;
+import edu.bit.eline.system.run.Processer;
+import edu.bit.eline.system.run.Producer;
 
 public class MainPanel extends JFrame {
     private static final long serialVersionUID = -8054742885149944542L;
-    private DetectorRunner    detection;
-    
+    private String            curSelect        = null;
+    private String            configPath       = "./config/";
+    private Producer          producer;
+    private Processer         processer;
+    private ImageStorage      storage;
+
     private Container         container;
     private JTree             treePanel;
-    private JPanel            westPanel;
-    private JPanel            westTopPanel;
+    private JLabel            statusTitle;
+    private JLabel            status;
+    private JPanel            commandPanel;
+    private JPanel            eastPanel;
+    private JPanel            centerPanel;
+    private JPanel            statusPanel;
     private JButton           getTree;
     private JButton           modelManager;
     private JButton           runLine;
     private JButton           runAll;
-    private ImagePanel        imagePanel;
-    private JSplitPane        bottomPanel;
-    private JTextField        varThrsh;
-    private JTextField        minArea;
-    private JTextField        alpha;
-    private JScrollPane       centerPanel;
+    private JButton           stopLine;
+    private JButton           stopAll;
+    private JScrollPane       treeController;
 
-    public MainPanel() {
-        setupGUI();
+    class TreeCellRenderer extends DefaultTreeCellRenderer {
+        private static final long serialVersionUID = -8890987966973311991L;
+
+        @Override
+        public Component getTreeCellRendererComponent(JTree tree, Object value,
+                boolean sel, boolean expanded, boolean leaf, int row,
+                boolean hasFocus) {
+            super.getTreeCellRendererComponent(tree, value, sel, expanded,
+                    leaf, row, hasFocus);
+            DefaultMutableTreeNode node = (DefaultMutableTreeNode) value;
+            String lineName = (String) node.getUserObject();
+            File modelFile = new File("./config/" + lineName);
+            if (modelFile.exists()) {
+                // System.out.println("here" + lineName);
+                setForeground(Color.RED);
+            }
+            return this;
+        }
     }
 
-    public void setupGUI() {
-        container = new JPanel();
-        container.setLayout(new BoxLayout(container, BoxLayout.Y_AXIS));
+    public MainPanel() {
+        storage = new ImageStorage();
+        producer = new Producer(storage);
+        processer = new Processer(storage);
+        setupGUI();
+        new Thread(producer).start();
+        new Thread(processer).start();
+    }
 
-        // 左边设备树及各个按钮
-        getTree = new JButton("获取摄像头树");
+    private void setupGUI() {
+        // 各个按钮
+        getTree = new JButton("获取设备树");
+        getTree.setAlignmentX(CENTER_ALIGNMENT);
         getTree.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -66,16 +101,20 @@ public class MainPanel extends JFrame {
                 }
             }
         });
-        getTree.setAlignmentX(CENTER_ALIGNMENT);
-        getTree.setMinimumSize(new Dimension(160, 30));
 
         runLine = new JButton("运行所选线路");
         runLine.setAlignmentX(CENTER_ALIGNMENT);
         runLine.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // TODO Auto-generated method stub
-
+                if (curSelect == null) {
+                    JOptionPane.showMessageDialog(null, "未选择任何线路。");
+                    return;
+                }
+                Params p = initRunner(curSelect, false);
+                if (p != null) {
+                    runLine(curSelect, p);
+                }
             }
         });
 
@@ -84,12 +123,45 @@ public class MainPanel extends JFrame {
         runAll.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // TODO Auto-generated method stub
+                List<String> allLeaves = getAllLeaf((DefaultMutableTreeNode) treePanel
+                        .getModel().getRoot());
+                for (String lineName : allLeaves) {
+                    Params p = initRunner(lineName, true);
+                    if (p != null) {
+                        runLine(lineName, p);
+                    }
+                }
+            }
+        });
 
+        stopLine = new JButton("停止所选线路");
+        stopLine.setAlignmentX(CENTER_ALIGNMENT);
+        stopLine.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent arg0) {
+                if (curSelect == null) {
+                    JOptionPane.showMessageDialog(null, "未选择任何线路。");
+                    return;
+                }
+                if (isRunning(curSelect)) {
+                    stopLine(curSelect);
+                } else {
+                    JOptionPane.showMessageDialog(null, "所选择的线路没有运行。");
+                }
+            }
+        });
+
+        stopAll = new JButton("停止所有线路");
+        stopAll.setAlignmentX(CENTER_ALIGNMENT);
+        stopAll.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                stopAll();
             }
         });
 
         modelManager = new JButton("模型管理器");
+        modelManager.setAlignmentX(CENTER_ALIGNMENT);
         modelManager.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -100,73 +172,83 @@ public class MainPanel extends JFrame {
                 new ModelManager(cameraList);
             }
         });
-        modelManager.setAlignmentX(CENTER_ALIGNMENT);
 
-        // 左边按钮部分
-        westTopPanel = new JPanel();
-        westTopPanel.setBorder(BorderFactory.createEtchedBorder());
-        westTopPanel.setLayout(new BoxLayout(westTopPanel, BoxLayout.Y_AXIS));
-        westTopPanel.add(Box.createVerticalStrut(5));
-        westTopPanel.add(getTree);
-        westTopPanel.add(Box.createVerticalStrut(5));
-        westTopPanel.add(modelManager);
-        westTopPanel.add(Box.createVerticalStrut(5));
-        westTopPanel.add(runLine);
-        westTopPanel.add(Box.createVerticalStrut(5));
-        westTopPanel.add(runAll);
-        westTopPanel.add(Box.createVerticalStrut(5));
+        // 状态
+        statusTitle = new JLabel("线路状态：");
+        statusTitle.setAlignmentX(LEFT_ALIGNMENT);
+        status = new JLabel();
+        status.setAlignmentX(LEFT_ALIGNMENT);
+        statusPanel = new JPanel();
+        statusPanel.setAlignmentX(CENTER_ALIGNMENT);
+        statusPanel.setLayout(new BoxLayout(statusPanel, BoxLayout.Y_AXIS));
+        statusPanel.add(statusTitle);
+        statusPanel.add(Box.createVerticalStrut(15));
+        statusPanel.add(status);
 
+        // 按钮
+        commandPanel = new JPanel();
+        commandPanel.setBorder(BorderFactory.createTitledBorder("命令"));
+        commandPanel.setAlignmentX(LEFT_ALIGNMENT);
+        commandPanel.setLayout(new BoxLayout(commandPanel, BoxLayout.Y_AXIS));
+        commandPanel.add(Box.createVerticalStrut(20));
+        commandPanel.add(getTree);
+        commandPanel.add(Box.createVerticalStrut(20));
+        commandPanel.add(modelManager);
+        commandPanel.add(Box.createVerticalStrut(20));
+        commandPanel.add(runLine);
+        commandPanel.add(Box.createVerticalStrut(20));
+        commandPanel.add(runAll);
+        commandPanel.add(Box.createVerticalStrut(20));
+        commandPanel.add(stopLine);
+        commandPanel.add(Box.createVerticalStrut(20));
+        commandPanel.add(stopAll);
+        commandPanel.add(Box.createVerticalStrut(50));
+        commandPanel.add(statusPanel);
+
+        // 东部
+        eastPanel = new JPanel();
+        eastPanel.setLayout(new BorderLayout());
+        eastPanel.add(Box.createHorizontalStrut(20), BorderLayout.EAST);
+        eastPanel.add(commandPanel, BorderLayout.CENTER);
+        eastPanel.add(Box.createHorizontalStrut(10), BorderLayout.WEST);
+
+        // 中部设备树
         treePanel = new JTree();
-        treePanel.addMouseListener(new MouseAdapter() {
+        treePanel.setCellRenderer(new TreeCellRenderer());
+        treePanel.addTreeSelectionListener(new TreeSelectionListener() {
             @Override
-            public void mouseReleased(MouseEvent e) {
-                // TODO Auto-generated method stub
-                int selRow = treePanel.getRowForLocation(e.getX(), e.getY());
-                if (selRow != -1 && e.isPopupTrigger()) {
-                    System.out.println("popup!");
+            public void valueChanged(TreeSelectionEvent e) {
+                DefaultMutableTreeNode tnode = (DefaultMutableTreeNode) treePanel
+                        .getLastSelectedPathComponent();
+                if (tnode.isLeaf()) {
+                    curSelect = (String) tnode.getUserObject();
+                    if (isRunning(curSelect)) {
+                        status.setText("线路正在运行");
+                    } else {
+                        status.setText("线路未运行");
+                    }
+                } else {
+                    curSelect = null;
                 }
+                System.out.println(curSelect);
             }
         });
+        treeController = new JScrollPane(treePanel);
+        treeController.setBorder(BorderFactory.createEtchedBorder());
 
-        // 整个左边
-        westPanel = new JPanel();
-        GridBagLayout gb = new GridBagLayout();
-        westPanel.setLayout(gb);
-        westPanel.add(westTopPanel);
-        westPanel.add(treePanel);
-        GridBagConstraints gbCon = new GridBagConstraints();
+        centerPanel = new JPanel();
+        centerPanel.setBorder(BorderFactory.createTitledBorder("设备树"));
+        centerPanel.add(treeController);
+        centerPanel.setLayout(new GridLayout(1, 1));
 
-        gbCon.fill = GridBagConstraints.BOTH;
-        gbCon.gridwidth = 0;
-        gbCon.weightx = 0;
-        gbCon.weighty = 0;
-        gb.setConstraints(westTopPanel, gbCon);
-
-        gbCon.fill = GridBagConstraints.BOTH;
-        gbCon.gridwidth = 0;
-        gbCon.weightx = 1;
-        gbCon.weighty = 1;
-        gb.setConstraints(treePanel, gbCon);
-
-        // 中部
-        imagePanel = new ImagePanel();
-        centerPanel = new JScrollPane();
-        centerPanel.add(imagePanel);
-        centerPanel
-                .setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-        centerPanel
-                .setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-
-        // 整个下部
-        bottomPanel = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
-        bottomPanel.setBorder(BorderFactory.createEmptyBorder());
-        bottomPanel.setLeftComponent(westPanel);
-        bottomPanel.setRightComponent(centerPanel);
-        bottomPanel.setEnabled(true);
-
+        // 顶层
+        container = new JPanel();
         container.setLayout(new BorderLayout());
-        container.add(bottomPanel, BorderLayout.CENTER);
-
+        container.add(centerPanel, BorderLayout.CENTER);
+        container.add(eastPanel, BorderLayout.EAST);
+        container.add(Box.createHorizontalStrut(20), BorderLayout.WEST);
+        container.add(Box.createVerticalStrut(10), BorderLayout.SOUTH);
+        container.add(Box.createVerticalStrut(10), BorderLayout.NORTH);
         finalSettings();
     }
 
@@ -175,7 +257,7 @@ public class MainPanel extends JFrame {
         return false;
     }
 
-    protected boolean getCameraTreeDemo() {
+    private boolean getCameraTreeDemo() {
         DefaultMutableTreeNode root = new DefaultMutableTreeNode("Root");
         root.add(new DefaultMutableTreeNode("child1"));
         root.add(new DefaultMutableTreeNode("child2"));
@@ -184,25 +266,51 @@ public class MainPanel extends JFrame {
         return true;
     }
 
-    protected void runButtomDemo() {
-        varThrsh.setEditable(false);
-        minArea.setEditable(false);
-        alpha.setEditable(false);
-        if (detectInitialize()) {
-            new Thread(detection).start();
+    private boolean isRunning(String lineName) {
+        return processer.isRunning(lineName);
+    }
+
+    private Params initRunner(String lineName, boolean quiet) {
+        String modelPath = configPath + lineName;
+        if (!(new File(modelPath).exists())) {
+            if (!quiet) {
+                JOptionPane.showMessageDialog(null, "模型文件不存在。", "遇到问题",
+                        JOptionPane.PLAIN_MESSAGE);
+            }
+            return null;
         }
-        varThrsh.setEditable(true);
-        minArea.setEditable(true);
-        alpha.setEditable(true);
+
+        Params param;
+        try {
+            param = new Params(lineName);
+        } catch (IOException e) {
+            if (!quiet) {
+                JOptionPane.showMessageDialog(null, "模型文件读取错误，请检查文件是否存在或是否损坏。",
+                        "遇到问题", JOptionPane.PLAIN_MESSAGE);
+            }
+            return null;
+        }
+        if (param.checkParams() == false) {
+            if (!quiet) {
+                JOptionPane.showMessageDialog(null, "模型文件不完整，可能需要重新训练。",
+                        "遇到问题", JOptionPane.PLAIN_MESSAGE);
+            }
+            return null;
+        }
+        return param;
     }
 
-    protected void runLine(String lineName) {
-        new Thread(detection).start();
+    private void runLine(String lineName, Params param) {
+        Detector det = new Detector(0, param.varThrshVal);
+        processer.runLine(lineName, det, param);
     }
 
-    protected boolean detectInitialize() {
-        // TODO: initialize parameters.
-        return false;
+    private void stopLine(String lineName) {
+        processer.stopLine(lineName);
+    }
+
+    private void stopAll() {
+        processer.stopAll();
     }
 
     private List<String> getAllLeaf(DefaultMutableTreeNode tree) {
@@ -227,11 +335,12 @@ public class MainPanel extends JFrame {
 
     private void finalSettings() {
         this.setContentPane(container);
-        setSize(1290, 800);
+        setSize(500, 500);
         setTitle("Demo");
         setVisible(true);
         setResizable(true);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
     }
 
     public static void main(String[] args) {

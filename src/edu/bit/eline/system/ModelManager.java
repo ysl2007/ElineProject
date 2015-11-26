@@ -46,13 +46,12 @@ public class ModelManager extends JFrame {
     }
 
     private void setupGUI(List<String> lineList) {
-        // 左边摄像头列表
-        cameraList = new JList<String>();
-
+        // 摄像头列表
         DefaultListModel<String> listModel = new DefaultListModel<String>();
         for (String line : lineList) {
             listModel.addElement(line);
         }
+        cameraList = new JList<String>();
         cameraList.setModel(listModel);
         cameraList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         cameraList.addListSelectionListener(new ListSelectionListener() {
@@ -62,6 +61,8 @@ public class ModelManager extends JFrame {
             }
         });
         cameraListController = new JScrollPane(cameraList);
+
+        // 左侧线路列表
         leftPane = new JPanel();
         leftPane.setLayout(new BoxLayout(leftPane, BoxLayout.Y_AXIS));
         leftPane.add(Box.createVerticalStrut(10));
@@ -71,7 +72,7 @@ public class ModelManager extends JFrame {
         leftPane.add(Box.createVerticalStrut(10));
         leftPane.setPreferredSize(new Dimension(50, 20));
 
-        // 右边模型列表
+        // 模型列表
         modelList = new JList<String>();
         modelList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         modelList.addListSelectionListener(new ListSelectionListener() {
@@ -81,6 +82,8 @@ public class ModelManager extends JFrame {
             }
         });
         modelListController = new JScrollPane(modelList);
+
+        // 右边列表
         rightPane = new JPanel();
         rightPane.setLayout(new BoxLayout(rightPane, BoxLayout.Y_AXIS));
         rightPane.add(Box.createVerticalStrut(10));
@@ -108,7 +111,8 @@ public class ModelManager extends JFrame {
             @Override
             public void actionPerformed(ActionEvent arg0) {
                 if (!refreshModelList()) {
-                    JOptionPane.showMessageDialog(null, "获取模型列表失败，请检查配置文件夹。", "发生错误", JOptionPane.WARNING_MESSAGE);
+                    JOptionPane.showMessageDialog(null, "获取模型列表失败，请检查配置文件夹。",
+                            "错误", JOptionPane.WARNING_MESSAGE);
                 }
             }
         });
@@ -120,7 +124,8 @@ public class ModelManager extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (curSelectedLine == null)
-                    JOptionPane.showMessageDialog(null, "没有选择任何线路。", "发生错误", JOptionPane.WARNING_MESSAGE);
+                    JOptionPane.showMessageDialog(null, "没有选择任何线路。", "错误",
+                            JOptionPane.WARNING_MESSAGE);
                 else
                     new Train(curSelectedLine);
             }
@@ -132,16 +137,7 @@ public class ModelManager extends JFrame {
         delModel.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (curSelectedModel == null || curSelectedModel.length() == 0) {
-                    JOptionPane.showMessageDialog(null, "没有选择任何模型", "没有选择模型", JOptionPane.WARNING_MESSAGE);
-                } else {
-                    int selectedOption = JOptionPane.showConfirmDialog(null, "确定删除所选模型吗？", "确认删除", JOptionPane.OK_CANCEL_OPTION);
-                    if (selectedOption == JOptionPane.OK_OPTION) {
-                        if (!delete(new File(curSelectedModel))) {
-                            JOptionPane.showMessageDialog(null, "删除失败，可能有文件未删除。", "删除失败", JOptionPane.ERROR_MESSAGE);
-                        }
-                    }
-                }
+                deleteModel();
             }
         });
 
@@ -166,28 +162,27 @@ public class ModelManager extends JFrame {
         container.add(Box.createHorizontalStrut(10));
         container.add(rightPane);
         container.add(Box.createHorizontalStrut(10));
-
         finalSettings();
     }
 
-    private boolean delete(File file) {
-        if (!file.exists()) {
-            return false;
-        }
-        boolean status = true;
-        if (file.isDirectory()) {
-            File[] subFiles = file.listFiles();
-            for (File f : subFiles) {
-                status = delete(f);
-                if (!status) {
-                    return false;
+    private void deleteModel() {
+        if (curSelectedModel == null || curSelectedModel.length() == 0) {
+            JOptionPane.showMessageDialog(null, "没有选择任何模型", "没有选择模型",
+                    JOptionPane.WARNING_MESSAGE);
+        } else {
+            int selectedOption = JOptionPane.showConfirmDialog(null,
+                    "确定删除所选模型吗？", "确认删除", JOptionPane.OK_CANCEL_OPTION);
+            if (selectedOption == JOptionPane.OK_OPTION) {
+                if (!Utils.delete(new File("./config/" + curSelectedModel))) {
+                    JOptionPane.showMessageDialog(null, "删除失败，可能有文件未删除。",
+                            "删除失败", JOptionPane.ERROR_MESSAGE);
+                } else {
+                    JOptionPane.showMessageDialog(null, "删除成功！", "成功",
+                            JOptionPane.PLAIN_MESSAGE);
                 }
+                refreshModelList();
             }
-            file.delete();
-        } else if (file.isFile()) {
-            return file.delete();
         }
-        return true;
     }
 
     private void finalSettings() {
@@ -197,6 +192,7 @@ public class ModelManager extends JFrame {
         setVisible(true);
         setResizable(true);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setLocationRelativeTo(null);
     }
 
     private boolean refreshModelList() {
