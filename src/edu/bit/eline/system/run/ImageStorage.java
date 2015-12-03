@@ -10,11 +10,9 @@ public class ImageStorage {
         imgQueue = new ConcurrentLinkedQueue<Pair<String, BufferedImage>>();
     }
 
-    public void put(Pair<String, BufferedImage> pair) {
+    public synchronized void put(Pair<String, BufferedImage> pair) {
         imgQueue.add(pair);
-        synchronized (this) {
-            notifyAll();
-        }
+        notifyAll();
     }
 
     public synchronized Pair<String, BufferedImage> get() {

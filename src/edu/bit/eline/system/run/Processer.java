@@ -1,6 +1,7 @@
 package edu.bit.eline.system.run;
 
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -33,20 +34,39 @@ public class Processer implements Runnable {
         classifier = new ImageClassification();
     }
 
-    public synchronized void runLine(String lineName, Detector det, Params param) {
-        detMap.put(lineName, new Pair<Detector, Params>(det, param));
+    public List<String> getRunningLine() {
+        synchronized (detMap) {
+            Enumeration<String> e = detMap.keys();
+            List<String> result = new ArrayList<String>();
+            while (e.hasMoreElements()) {
+                result.add(e.nextElement());
+            }
+            return result;
+        }
     }
 
-    public synchronized void stopLine(String lineName) {
-        detMap.remove(lineName);
+    public void runLine(String lineName, Detector det, Params param) {
+        synchronized (detMap) {
+            detMap.put(lineName, new Pair<Detector, Params>(det, param));
+        }
     }
 
-    public synchronized void stopAll() {
-        detMap.clear();
+    public void stopLine(String lineName) {
+        synchronized (detMap) {
+            detMap.remove(lineName);
+        }
     }
 
-    public synchronized Enumeration<String> getLines() {
-        return detMap.keys();
+    public void stopAll() {
+        synchronized (detMap) {
+            detMap.clear();
+        }
+    }
+
+    public Enumeration<String> getLines() {
+        synchronized (detMap) {
+            return detMap.keys();
+        }
     }
 
     public boolean isRunning(String lineName) {
@@ -62,10 +82,13 @@ public class Processer implements Runnable {
             Pair<String, BufferedImage> pair = store.get();
             String lineName = pair.getKey();
             BufferedImage bimg = pair.getVal();
-            if (!detMap.containsKey(lineName)) {
-                continue;
+            Pair<Detector, Params> detPair;
+            synchronized (detMap) {
+                if (!detMap.containsKey(lineName)) {
+                    continue;
+                }
+                detPair = detMap.get(lineName);
             }
-            Pair<Detector, Params> detPair = detMap.get(lineName);
             Detector det = detPair.getKey();
             Params param = detPair.getVal();
             Mat imgMat = converter.convert2Mat(bimg);

@@ -31,17 +31,17 @@ import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
 
 import edu.bit.eline.detection.Detector;
+import edu.bit.eline.system.run.ImageProvider;
 import edu.bit.eline.system.run.ImageStorage;
 import edu.bit.eline.system.run.Processer;
-import edu.bit.eline.system.run.Producer;
 
 public class MainPanel extends JFrame {
     private static final long serialVersionUID = -8054742885149944542L;
     private String            curSelect        = null;
     private String            configPath       = "./config/";
-    private Producer          producer;
     private Processer         processer;
     private ImageStorage      storage;
+    private ImageProvider     imgProvider;
 
     private Container         container;
     private JTree             treePanel;
@@ -72,7 +72,6 @@ public class MainPanel extends JFrame {
             String lineName = (String) node.getUserObject();
             File modelFile = new File("./config/" + lineName);
             if (modelFile.exists()) {
-                // System.out.println("here" + lineName);
                 setForeground(Color.RED);
             }
             return this;
@@ -81,10 +80,11 @@ public class MainPanel extends JFrame {
 
     public MainPanel() {
         storage = new ImageStorage();
-        producer = new Producer(storage);
         processer = new Processer(storage);
+        imgProvider = new ImageProvider(storage, processer);
+
         setupGUI();
-        new Thread(producer).start();
+        new Thread(imgProvider).start();
         new Thread(processer).start();
     }
 
@@ -229,6 +229,7 @@ public class MainPanel extends JFrame {
                     }
                 } else {
                     curSelect = null;
+                    status.setText(null);
                 }
                 System.out.println(curSelect);
             }

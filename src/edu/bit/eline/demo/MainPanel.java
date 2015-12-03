@@ -4,12 +4,8 @@ import java.awt.BorderLayout;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FilenameFilter;
@@ -28,11 +24,7 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JSplitPane;
 import javax.swing.JTextField;
-import javax.swing.JTree;
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.DefaultTreeModel;
 
 import org.bytedeco.javacpp.opencv_core.CvRect;
 import org.bytedeco.javacpp.opencv_core.IplImage;
@@ -46,26 +38,22 @@ import edu.bit.eline.detection.ImageConverter;
 import edu.bit.eline.recognise.feature.ExtractFeature;
 import edu.bit.eline.recognise.svm.ImageClassification;
 
-public class DemoPanelOld extends JFrame {
+public class MainPanel extends JFrame {
     private static final long serialVersionUID = -8054742885149944542L;
 
-    private ParamsDemo            param;
     private Detection         detection;
+    private Params            param;
 
-    private JTree             treePanel;
     private JPanel            topLeft;
     private JPanel            topRight;
     private JPanel            topPanel;
-    private JPanel            westPanel;
-    private JPanel            westTopPanel;
-    private JButton           browse;
+    private JButton           browseImg;
+    private JButton           browseModel;
     private JButton           run;
-    private JButton           getTree;
-    private JButton           modelManager;
-    private ImagePanel        imagePanel;
     private Container         container;
-    private JSplitPane        bottomPanel;
-    private JTextField        dir;
+    private ImagePanel        imagePanel;
+    private JTextField        dirField;
+    private JTextField        modelField;
     private JTextField        varThrsh;
     private JTextField        minArea;
     private JTextField        alpha;
@@ -77,9 +65,9 @@ public class DemoPanelOld extends JFrame {
         private ImageConverter      converter;
         private ExtractFeature      ef;
         private ImageClassification ic;
-        private ParamsDemo              param;
+        private Params              param;
 
-        public Detection(ParamsDemo param) {
+        public Detection(Params param) {
             this.param = param;
             detector = new Detector(0, param.varThrshVal);
             analyzer = new BlobAnalyzer(param.minAreaVal);
@@ -101,7 +89,8 @@ public class DemoPanelOld extends JFrame {
                     bimg = ImageIO.read(new File(imgFilename));
                 } catch (IOException e) {
                     e.printStackTrace();
-                    System.err.println("Failed to open image file: " + imgFilename);
+                    System.err.println("Failed to open image file: "
+                            + imgFilename);
                     continue;
                 }
                 if (bimg == null)
@@ -114,17 +103,20 @@ public class DemoPanelOld extends JFrame {
                 Color color = new Color(255, 0, 0);
                 for (Blob blob : blobList) {
                     CvRect rect = blob.getRect();
-                    BufferedImage subimg = bimg.getSubimage(rect.x(), rect.y(), rect.width(), rect.height());
+                    BufferedImage subimg = bimg.getSubimage(rect.x(), rect.y(),
+                            rect.width(), rect.height());
                     String feature = ef.extractIMGfeature(subimg);
-                    // String label = ic.classifyOneImg("1 " + feature);
-                    String label = ic.classifyOneImg("4 " + feature, ".\\config\\models\\model0.0.4.0.model", ".\\config\\models\\scale.params");
+                    String label = ic.classifyOneImg("4 " + feature,
+                            ".\\config\\default\\model0.0.4.0.model",
+                            ".\\config\\default\\scale.params");
                     if (!label.equals("0.0"))
                         imgMat = blob.drawRect(imgMat, color);
                 }
                 BufferedImage imgProcessed = converter.convert2JavaImg(imgMat);
                 imagePanel.setImage(imgProcessed);
                 centerPanel.setViewportView(imagePanel);
-                imagePanel.setPreferredSize(new Dimension(imgProcessed.getWidth(), imgProcessed.getHeight()));
+                imagePanel.setPreferredSize(new Dimension(imgProcessed
+                        .getWidth(), imgProcessed.getHeight()));
                 try {
                     Thread.sleep(500);
                 } catch (InterruptedException e) {
@@ -134,8 +126,8 @@ public class DemoPanelOld extends JFrame {
         }
     }
 
-    public DemoPanelOld() {
-        param = new ParamsDemo();
+    public MainPanel() {
+        param = new Params();
         setupGUI();
     }
 
@@ -143,31 +135,50 @@ public class DemoPanelOld extends JFrame {
         container = new JPanel();
         container.setLayout(new BoxLayout(container, BoxLayout.Y_AXIS));
 
-        dir = new JTextField("e:/example/5");
-        dir.setColumns(20);
-        browse = new JButton("Browse");
-        browse.addActionListener(new ActionListener() {
+        // 左上角浏览文件夹部分
+        JLabel dirLabel = new JLabel("图片文件夹：");
+        dirField = new JTextField("e:/example/5");
+        dirField.setColumns(15);
+        browseImg = new JButton("浏览");
+        browseImg.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent arg0) {
-                browseButton();
+                browseButton(dirField);
             }
         });
 
+        JLabel modLabel = new JLabel("模型文件夹：");
+        modelField = new JTextField();
+        modelField.setColumns(15);
+        browseModel = new JButton("浏览");
+        browseModel.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                browseButton(modelField);
+            }
+        });
+
+        JPanel dirPanel = new JPanel();
+        dirPanel.setLayout(new FlowLayout());
+        dirPanel.add(dirLabel);
+        dirPanel.add(dirField);
+        dirPanel.add(browseImg);
+
+        JPanel modPanel = new JPanel();
+        modPanel.setLayout(new FlowLayout());
+        modPanel.add(modLabel);
+        modPanel.add(modelField);
+        modPanel.add(browseModel);
+
         topLeft = new JPanel();
-        topLeft.setLayout(new BoxLayout(topLeft, BoxLayout.Y_AXIS));
-        topLeft.add(Box.createVerticalStrut(5));
-        JPanel topLeftButton = new JPanel();
-        topLeftButton.setLayout(new FlowLayout());
-        topLeftButton.add(browse);
-        topLeftButton.add(dir);
-        topLeft.add(topLeftButton);
-        topLeft.add(Box.createVerticalStrut(5));
-        topLeft.setPreferredSize(new Dimension(150, 10));
+        topLeft.setBorder(BorderFactory.createTitledBorder("文件："));
+        topLeft.setLayout(new BoxLayout(topLeft, BoxLayout.X_AXIS));
+        topLeft.add(Box.createHorizontalStrut(5));
+        topLeft.add(dirPanel);
+        topLeft.add(Box.createHorizontalStrut(5));
+        topLeft.add(modPanel);
 
-        topRight = new JPanel();
-        topRight.setLayout(new BoxLayout(topRight, BoxLayout.Y_AXIS));
-        topRight.add(Box.createVerticalStrut(5));
-
+        // 右上角参数选择、运行
         JPanel topRightArea = new JPanel();
         topRightArea.setLayout(new FlowLayout(FlowLayout.LEFT));
         topRightArea.add(new JLabel("Variance:"));
@@ -185,13 +196,17 @@ public class DemoPanelOld extends JFrame {
         minArea.setText("4000");
         minArea.setColumns(5);
         topRightArea.add(minArea);
-        run = new JButton("Run");
+        run = new JButton("运行");
         run.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent arg0) {
-                runButtom();
+                runButtomDemo();
             }
         });
+
+        topRight = new JPanel();
+        topRight.setBorder(BorderFactory.createTitledBorder("参数："));
+        topRight.setLayout(new BoxLayout(topRight, BoxLayout.X_AXIS));
         topRightArea.add(run);
         topRight.add(topRightArea);
         topRight.add(Box.createVerticalStrut(5));
@@ -203,105 +218,28 @@ public class DemoPanelOld extends JFrame {
         topPanel.add(topRight);
         topPanel.setEnabled(false);
 
-        getTree = new JButton("Obtain camera tree");
-        getTree.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (!getCameraTreeDemo()) {
-                    JOptionPane.showMessageDialog(null, "Failed to obtain camera tree.");
-                }
-            }
-        });
-        getTree.setAlignmentX(CENTER_ALIGNMENT);
-        getTree.setMinimumSize(new Dimension(160, 30));
-
-        modelManager = new JButton("Model Manager");
-        modelManager.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                new ModelManager(null);
-            }
-        });
-        modelManager.setAlignmentX(CENTER_ALIGNMENT);
-
-        westTopPanel = new JPanel();
-        westTopPanel.setBorder(BorderFactory.createEtchedBorder());
-        westTopPanel.setLayout(new BoxLayout(westTopPanel, BoxLayout.Y_AXIS));
-        westTopPanel.add(Box.createVerticalStrut(5));
-        westTopPanel.add(getTree);
-        westTopPanel.add(Box.createVerticalStrut(5));
-        westTopPanel.add(modelManager);
-        westTopPanel.add(Box.createVerticalStrut(5));
-
-        treePanel = new JTree();
-        treePanel.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseReleased(MouseEvent e) {
-                // TODO Auto-generated method stub
-                int selRow = treePanel.getRowForLocation(e.getX(), e.getY());
-                if (selRow != -1 && e.isPopupTrigger()) {
-                    System.out.println("popup!");
-                }
-            }
-        });
-
-        westPanel = new JPanel();
-        GridBagLayout gb = new GridBagLayout();
-        westPanel.setLayout(gb);
-        westPanel.add(westTopPanel);
-        westPanel.add(treePanel);
-        GridBagConstraints gbCon = new GridBagConstraints();
-
-        gbCon.fill = GridBagConstraints.BOTH;
-        gbCon.gridwidth = 0;
-        gbCon.weightx = 0;
-        gbCon.weighty = 0;
-        gb.setConstraints(westTopPanel, gbCon);
-
-        gbCon.fill = GridBagConstraints.BOTH;
-        gbCon.gridwidth = 0;
-        gbCon.weightx = 1;
-        gbCon.weighty = 1;
-        gb.setConstraints(treePanel, gbCon);
-
+        // 中部
         imagePanel = new ImagePanel();
         centerPanel = new JScrollPane();
         centerPanel.add(imagePanel);
-        centerPanel.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-        centerPanel.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        centerPanel
+                .setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        centerPanel
+                .setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 
-        bottomPanel = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
-        bottomPanel.setBorder(BorderFactory.createEmptyBorder());
-        bottomPanel.setLeftComponent(westPanel);
-        bottomPanel.setRightComponent(centerPanel);
-        bottomPanel.setEnabled(true);
-
+        // 整个下部
         container.setLayout(new BorderLayout());
         container.add(topPanel, BorderLayout.NORTH);
-        container.add(bottomPanel, BorderLayout.CENTER);
+        container.add(centerPanel, BorderLayout.CENTER);
 
-        finalSetting();
-    }
-
-    protected boolean getCameraTree() {
-        // TODO: getCameraTree
-        return false;
-    }
-
-    protected boolean getCameraTreeDemo() {
-        DefaultMutableTreeNode root = new DefaultMutableTreeNode("Root");
-        root.add(new DefaultMutableTreeNode("child1"));
-        root.add(new DefaultMutableTreeNode("child2"));
-        DefaultTreeModel dt = new DefaultTreeModel(root);
-        treePanel.setModel(dt);
-        return true;
+        finalSettings();
     }
 
     protected List<String> getImgList() {
         List<String> imgList = new ArrayList<String>();
-        String path = dir.getText();
+        String path = dirField.getText();
         File directory = new File(path);
-        dir.setText(directory.getAbsolutePath());
+        dirField.setText(directory.getAbsolutePath());
         File[] imgInDir = directory.listFiles(new FilenameFilter() {
             @Override
             public boolean accept(File arg0, String arg1) {
@@ -320,7 +258,7 @@ public class DemoPanelOld extends JFrame {
         return imgList;
     }
 
-    protected void runButtom() {
+    protected void runButtomDemo() {
         varThrsh.setEditable(false);
         minArea.setEditable(false);
         alpha.setEditable(false);
@@ -332,13 +270,13 @@ public class DemoPanelOld extends JFrame {
         alpha.setEditable(true);
     }
 
-    protected void browseButton() {
+    protected void browseButton(JTextField textField) {
         JFileChooser dirChooser = new JFileChooser();
         dirChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
         int returnVal = dirChooser.showOpenDialog(null);
         if (returnVal == JFileChooser.APPROVE_OPTION) {
             String selectedDir = dirChooser.getSelectedFile().getAbsolutePath();
-            dir.setText(selectedDir);
+            textField.setText(selectedDir);
         }
     }
 
@@ -364,7 +302,7 @@ public class DemoPanelOld extends JFrame {
         return true;
     }
 
-    private void finalSetting() {
+    private void finalSettings() {
         this.setContentPane(container);
         setSize(1290, 800);
         setTitle("Demo");
@@ -374,7 +312,6 @@ public class DemoPanelOld extends JFrame {
     }
 
     public static void main(String[] args) {
-        new DemoPanelOld();
+        new MainPanel();
     }
-
 }
