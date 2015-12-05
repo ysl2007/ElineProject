@@ -35,7 +35,11 @@ public class Params {
     }
 
     public boolean checkParams() {
-        if (varThrshVal < 0 || alphaVal <= 0 || minAreaVal < 0)
+        if (!new File(scaleParamPath).exists())
+            return false;
+        if (!new File(finalModelPath).exists())
+            return false;
+        if (varThrshVal < 0 || alphaVal <= 0)
             return false;
         return true;
     }

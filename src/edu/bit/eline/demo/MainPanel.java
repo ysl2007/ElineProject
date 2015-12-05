@@ -107,8 +107,10 @@ public class MainPanel extends JFrame {
                             rect.width(), rect.height());
                     String feature = ef.extractIMGfeature(subimg);
                     String label = ic.classifyOneImg("4 " + feature,
-                            ".\\config\\default\\model0.0.4.0.model",
-                            ".\\config\\default\\scale.params");
+                            param.finalModelPath, param.scaleParamPath,
+                            param.tempimgfeaturepath,
+                            param.tempscaleimgfeaturepath,
+                            param.tempimageresultpath);
                     if (!label.equals("0.0"))
                         imgMat = blob.drawRect(imgMat, color);
                 }
@@ -127,7 +129,6 @@ public class MainPanel extends JFrame {
     }
 
     public MainPanel() {
-        param = new Params();
         setupGUI();
     }
 
@@ -200,7 +201,7 @@ public class MainPanel extends JFrame {
         run.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent arg0) {
-                runButtomDemo();
+                runButtom();
             }
         });
 
@@ -235,6 +236,16 @@ public class MainPanel extends JFrame {
         finalSettings();
     }
 
+    protected void browseButton(JTextField textField) {
+        JFileChooser dirChooser = new JFileChooser();
+        dirChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        int returnVal = dirChooser.showOpenDialog(null);
+        if (returnVal == JFileChooser.APPROVE_OPTION) {
+            String selectedDir = dirChooser.getSelectedFile().getAbsolutePath();
+            textField.setText(selectedDir);
+        }
+    }
+
     protected List<String> getImgList() {
         List<String> imgList = new ArrayList<String>();
         String path = dirField.getText();
@@ -258,11 +269,12 @@ public class MainPanel extends JFrame {
         return imgList;
     }
 
-    protected void runButtomDemo() {
+    protected void runButtom() {
         varThrsh.setEditable(false);
         minArea.setEditable(false);
         alpha.setEditable(false);
-        if (detectInitialize()) {
+        if (paramInitialize(modelField.getText())) {
+            detection = new Detection(param);
             new Thread(detection).start();
         }
         varThrsh.setEditable(true);
@@ -270,35 +282,21 @@ public class MainPanel extends JFrame {
         alpha.setEditable(true);
     }
 
-    protected void browseButton(JTextField textField) {
-        JFileChooser dirChooser = new JFileChooser();
-        dirChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-        int returnVal = dirChooser.showOpenDialog(null);
-        if (returnVal == JFileChooser.APPROVE_OPTION) {
-            String selectedDir = dirChooser.getSelectedFile().getAbsolutePath();
-            textField.setText(selectedDir);
-        }
-    }
-
-    protected boolean detectInitialize() {
+    protected boolean paramInitialize(String rootDir) {
+        param = new Params(rootDir);
         try {
             param.varThrshVal = Float.parseFloat(varThrsh.getText());
             param.minAreaVal = Integer.parseInt(minArea.getText());
             param.alphaVal = Double.parseDouble(alpha.getText());
         } catch (NumberFormatException e) {
             e.printStackTrace();
-            JOptionPane.showMessageDialog(null, "Parameters error.");
+            JOptionPane.showMessageDialog(null, "参数输入错误。");
             return false;
         }
-
-        List<String> imgList;
-        if ((imgList = getImgList()) == null) {
-            JOptionPane.showMessageDialog(null, "Image directory error.");
+        param.imgList = getImgList();
+        if (!param.checkParams()) {
             return false;
         }
-
-        param.imgList = imgList;
-        detection = new Detection(param);
         return true;
     }
 
