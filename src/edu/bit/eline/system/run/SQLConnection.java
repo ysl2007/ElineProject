@@ -1,18 +1,45 @@
 package edu.bit.eline.system.run;
 
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
+import javax.swing.JOptionPane;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.json.JSONTokener;
+
 public class SQLConnection {
+    private String configFile = "./config.json";
     private String     dbURL;
     private String     userName;
     private String     passwd;
     private Connection dbConn;
 
-    public SQLConnection(String userName, String passwd) {
-        this.userName = userName;
-        this.passwd = passwd;
+    public SQLConnection() {
+        JSONTokener tokener;
+        try {
+            tokener = new JSONTokener(new FileReader(configFile));
+        } catch (FileNotFoundException e) {
+            JOptionPane.showMessageDialog(null, "找不到配置文件。", "错误",
+                    JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+            return;
+        }
+        JSONObject jo = new JSONObject(tokener);
+        try {
+            dbURL = jo.getString("database_url");
+            userName = jo.getString("database_username");
+            passwd = jo.getString("database_password");
+        } catch (JSONException e) {
+            JOptionPane.showMessageDialog(null, "配置文件不完整。", "错误",
+                    JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+            return;
+        }
     }
 
     public boolean connect() {

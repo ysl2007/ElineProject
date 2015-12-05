@@ -8,6 +8,8 @@ import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 
 import javax.swing.BorderFactory;
@@ -15,6 +17,7 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -22,18 +25,24 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.json.JSONTokener;
+
 public class Train extends JFrame {
     private static final long serialVersionUID = 3541303824514014559L;
     private TrainHelper       tHelper;
     private String            selectedClass;
+    private String            configFile       = "./config.json";
+    private String            rootPath;
 
     private Container         container;
-    private JPanel            labels;
-    private JPanel            values;
+    private JPanel            inDet;
     private JPanel            center;
     private JPanel            topPanel;
     private JPanel            detection;
-    private JPanel            recognization;
+    private JPanel            classPanel;
+    private JPanel            samplePanel;
     private JPanel            buttonPanel;
     private JPanel            actionPanel;
     private JButton           getReady;
@@ -42,11 +51,13 @@ public class Train extends JFrame {
     private JButton           featNorm;
     private JButton           paramOpti;
     private JButton           train;
-    private JButton           confirm;
+    private JButton           sampDirBrowse;
+    private JButton           exit;
     private JTextField        name;
     private JTextField        var;
     private JTextField        alpha;
     private JTextField        minArea;
+    private JTextField        sampDirField;
     private ButtonGroup       btGroup;
     private JRadioButton      craneCheck;
     private JRadioButton      pumpCheck;
@@ -55,6 +66,24 @@ public class Train extends JFrame {
     private JRadioButton      fogCheck;
 
     public Train(String lineName) {
+        JSONTokener tokener;
+        try {
+            tokener = new JSONTokener(new FileReader(configFile));
+        } catch (FileNotFoundException e) {
+            JOptionPane.showMessageDialog(null, "找不到配置文件。", "错误",
+                    JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+            return;
+        }
+        JSONObject jo = new JSONObject(tokener);
+        try {
+            rootPath = jo.getString("config_root_path");
+        } catch (JSONException e) {
+            JOptionPane.showMessageDialog(null, "配置文件不完整。", "错误",
+                    JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+            return;
+        }
         setupGUI(lineName);
         finalSettings();
     }
@@ -74,62 +103,38 @@ public class Train extends JFrame {
                 selectedClass = "5.0";
             else
                 selectedClass = null;
-//            System.out.println(selectedClass);
         }
     }
 
     protected void setupGUI(String lineName) {
-        // detection部分
-        labels = new JPanel();
-        labels.setLayout(new BoxLayout(labels, BoxLayout.Y_AXIS));
-        labels.add(Box.createVerticalStrut(5));
-        labels.add(new JLabel("线路名称(全称)："));
-        labels.add(Box.createVerticalStrut(10));
-        labels.add(new JLabel("方差阈值："));
-        labels.add(Box.createVerticalStrut(10));
-        labels.add(new JLabel("学习率："));
-        labels.add(Box.createVerticalStrut(10));
-        labels.add(new JLabel("最小识别面积："));
-        labels.add(Box.createVerticalStrut(8));
+        // detection参数部分
+        inDet = new JPanel();
+        GridLayout gl = new GridLayout(4, 2);
+        gl.setVgap(5);
 
+        inDet.setLayout(gl);
+        inDet.add(new JLabel("线路名称（全称）："));
         name = new JTextField();
         if (!(lineName == null || lineName.equals(""))) {
             name.setText(lineName);
             name.setEditable(false);
         }
-        name.setColumns(10);
-        var = new JTextField();
-        var.setText("9");
-        var.setColumns(5);
-        alpha = new JTextField();
-        alpha.setText("0.1");
-        alpha.setColumns(5);
-        minArea = new JTextField();
-        minArea.setText("4000");
-        minArea.setColumns(5);
-
-        values = new JPanel();
-        values.setLayout(new BoxLayout(values, BoxLayout.Y_AXIS));
-        values.add(Box.createVerticalStrut(8));
-        values.add(name);
-        values.add(Box.createVerticalStrut(8));
-        values.add(var);
-        values.add(Box.createVerticalStrut(8));
-        values.add(alpha);
-        values.add(Box.createVerticalStrut(8));
-        values.add(minArea);
-        values.add(Box.createVerticalStrut(8));
+        inDet.add(name);
+        inDet.add(new JLabel("方差阈值："));
+        inDet.add(new JTextField("9"));
+        inDet.add(new JLabel("学习率："));
+        inDet.add(new JTextField("0.1"));
+        inDet.add(new JLabel("最小识别面积："));
+        inDet.add(new JTextField("4000"));
 
         detection = new JPanel();
-        detection.setLayout(new BoxLayout(detection, BoxLayout.X_AXIS));
         detection.setBorder(BorderFactory.createTitledBorder("检测"));
-        detection.add(Box.createHorizontalStrut(10));
-        detection.add(labels);
-        detection.add(Box.createHorizontalStrut(10));
-        detection.add(values);
-        detection.add(Box.createHorizontalStrut(10));
+        detection.setLayout(new BoxLayout(detection, BoxLayout.X_AXIS));
+        detection.add(Box.createHorizontalStrut(5));
+        detection.add(inDet);
+        detection.add(Box.createHorizontalStrut(5));
 
-        // Recognization部分
+        // 异常类别部分
         CheckListener listener = new CheckListener();
         craneCheck = new JRadioButton("吊车");
         craneCheck.setAlignmentX(LEFT_ALIGNMENT);
@@ -158,22 +163,48 @@ public class Train extends JFrame {
         btGroup.add(towerCheck);
         btGroup.add(fogCheck);
 
-        // Recognization主体
-        recognization = new JPanel();
-        recognization.setBorder(BorderFactory.createTitledBorder("异常类"));
-        recognization.setLayout(new GridLayout(3, 2));
-        recognization.setPreferredSize(new Dimension(100, 30));
-        recognization.add(craneCheck);
-        recognization.add(pumpCheck);
-        recognization.add(diggerCheck);
-        recognization.add(towerCheck);
-        recognization.add(fogCheck);
+        classPanel = new JPanel();
+        classPanel.setBorder(BorderFactory.createTitledBorder("异常类"));
+        classPanel.setLayout(new GridLayout(3, 2));
+        classPanel.setPreferredSize(new Dimension(100, 30));
+        classPanel.add(craneCheck);
+        classPanel.add(pumpCheck);
+        classPanel.add(diggerCheck);
+        classPanel.add(towerCheck);
+        classPanel.add(fogCheck);
+
+        // 样本路径选择
+        JLabel sampleDir = new JLabel("样本路径：");
+        sampDirField = new JTextField();
+        sampDirField.setColumns(10);
+        sampDirBrowse = new JButton("浏览");
+        sampDirBrowse.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                JFileChooser dirChooser = new JFileChooser();
+                dirChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+                int returnVal = dirChooser.showOpenDialog(null);
+                if (returnVal == JFileChooser.APPROVE_OPTION) {
+                    String selectedDir = dirChooser.getSelectedFile()
+                            .getAbsolutePath();
+                    sampDirField.setText(selectedDir);
+                }
+            }
+        });
+
+        samplePanel = new JPanel();
+        samplePanel.setBorder(BorderFactory.createTitledBorder("样本路径"));
+        samplePanel.add(sampleDir);
+        samplePanel.add(sampDirField);
+        samplePanel.add(sampDirBrowse);
 
         // 整个中部
         center = new JPanel();
-        center.setLayout(new GridLayout(2, 1));
+        center.setLayout(new GridLayout(3, 1));
+        // center.setLayout(new BoxLayout(center, BoxLayout.Y_AXIS));
         center.add(detection);
-        center.add(recognization);
+        center.add(classPanel);
+        center.add(samplePanel);
 
         // 动作按钮
         getReady = new JButton("准备训练");
@@ -248,8 +279,8 @@ public class Train extends JFrame {
         actionPanel.add(train);
 
         // 南侧按钮部分
-        confirm = new JButton("关闭");
-        confirm.addActionListener(new ActionListener() {
+        exit = new JButton("关闭");
+        exit.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent arg0) {
                 disposeMe();
@@ -258,7 +289,7 @@ public class Train extends JFrame {
 
         buttonPanel = new JPanel();
         buttonPanel.setLayout(new FlowLayout());
-        buttonPanel.add(confirm);
+        buttonPanel.add(exit);
 
         // 最上层部分
         topPanel = new JPanel();
@@ -382,7 +413,7 @@ public class Train extends JFrame {
                     "训练尚未完成，如果关闭窗口，则会删除已有临时文件，是否继续？", "训练未完成",
                     JOptionPane.YES_NO_OPTION);
             if (status == JOptionPane.YES_OPTION) {
-                Utils.delete(new File("./config/" + name.getText()));
+                Utils.delete(new File(rootPath + "/models/" + name.getText()));
             }
         }
         Train.this.dispose();
@@ -402,7 +433,7 @@ public class Train extends JFrame {
 
     private void finalSettings() {
         this.setContentPane(container);
-        setSize(420, 380);
+        setSize(420, 600);
         setTitle("模型训练");
         setVisible(true);
         setResizable(false);

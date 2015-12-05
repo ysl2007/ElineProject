@@ -1,0 +1,6 @@
+{
+    "config_root_path" : "E:\\国网项目\\config\\",
+    "database_ip" : "http://localhost/",
+    "database_username" : "sa",
+    "database_password" : "pw",
+}

@@ -2,14 +2,15 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="./lib/javacpp.jar"/>
-	<classpathentry kind="lib" path="./lib/javacv.jar"/>
-	<classpathentry kind="lib" path="./lib/libsvm.jar"/>
-	<classpathentry kind="lib" path="./lib/lire.jar"/>
-	<classpathentry kind="lib" path="./lib/opencv.jar"/>
-	<classpathentry kind="lib" path="./lib/opencv-windows-x86.jar"/>
-	<classpathentry kind="lib" path="./lib/opencv-windows-x86_64.jar"/>
-	<classpathentry kind="lib" path="./lib/weka.jar"/>
-	<classpathentry kind="lib" path="./lib/wlsvm.jar"/>
+	<classpathentry kind="lib" path="lib/javacpp.jar"/>
+	<classpathentry kind="lib" path="lib/javacv.jar"/>
+	<classpathentry kind="lib" path="lib/libsvm.jar"/>
+	<classpathentry kind="lib" path="lib/lire.jar"/>
+	<classpathentry kind="lib" path="lib/opencv.jar"/>
+	<classpathentry kind="lib" path="lib/opencv-windows-x86.jar"/>
+	<classpathentry kind="lib" path="lib/opencv-windows-x86_64.jar"/>
+	<classpathentry kind="lib" path="lib/weka.jar"/>
+	<classpathentry kind="lib" path="lib/wlsvm.jar"/>
+	<classpathentry kind="lib" path="E:/Git/ElineProject/lib/json.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

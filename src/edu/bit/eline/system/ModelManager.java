@@ -6,6 +6,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileFilter;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.util.Arrays;
 import java.util.List;
 
@@ -23,8 +25,14 @@ import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.json.JSONTokener;
+
 public class ModelManager extends JFrame {
     private static final long serialVersionUID = -6948336292066740769L;
+    private String            configFile       = "./config.json";
+    private String            modelDir;
     private String            curSelectedLine;
     private String            curSelectedModel;
 
@@ -42,6 +50,26 @@ public class ModelManager extends JFrame {
     private JScrollPane       modelListController;
 
     public ModelManager(List<String> lineList) {
+        JSONTokener tokener;
+        try {
+            tokener = new JSONTokener(new FileReader(configFile));
+        } catch (FileNotFoundException e) {
+            JOptionPane.showMessageDialog(null, "找不到配置文件。", "错误",
+                    JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+            return;
+        }
+        JSONObject jo = new JSONObject(tokener);
+        String configPath;
+        try{
+        configPath = jo.getString("config_root_path");
+        } catch (JSONException e){
+            JOptionPane.showMessageDialog(null, "配置文件不完整。", "错误",
+                    JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+            return;
+        }
+        modelDir = configPath + "/models/";
         setupGUI(lineList);
     }
 
@@ -197,7 +225,7 @@ public class ModelManager extends JFrame {
 
     private boolean refreshModelList() {
         try {
-            File modelDir = new File("./config/");
+            File modelDir = new File(this.modelDir);
             File[] modelDirList = modelDir.listFiles(new FileFilter() {
                 @Override
                 public boolean accept(File arg0) {

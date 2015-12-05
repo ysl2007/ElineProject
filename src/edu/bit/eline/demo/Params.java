@@ -15,7 +15,7 @@ public class Params {
     public List<String> imgList;
 
     public Params(String rootPath) {
-        rootPath += File.pathSeparator;
+        rootPath += "/";
         String tempPath = rootPath + "temp/";
         File tmp = new File(tempPath);
         if (!tmp.isDirectory()) {

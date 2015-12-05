@@ -8,6 +8,8 @@ import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -30,6 +32,9 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
 
+import org.json.JSONObject;
+import org.json.JSONTokener;
+
 import edu.bit.eline.detection.Detector;
 import edu.bit.eline.system.run.ImageProvider;
 import edu.bit.eline.system.run.ImageStorage;
@@ -37,8 +42,9 @@ import edu.bit.eline.system.run.Processer;
 
 public class MainPanel extends JFrame {
     private static final long serialVersionUID = -8054742885149944542L;
+    private String            configFile       = "./config.json";
     private String            curSelect        = null;
-    private String            configPath       = "./config/";
+    private String            configPath;
     private Processer         processer;
     private ImageStorage      storage;
     private ImageProvider     imgProvider;
@@ -78,12 +84,17 @@ public class MainPanel extends JFrame {
         }
     }
 
-    public MainPanel() {
+    public MainPanel() throws FileNotFoundException {
+        // 配置文件
+        JSONTokener tokener = new JSONTokener(new FileReader(configFile));
+        JSONObject jo = new JSONObject(tokener);
+        configPath = jo.getString("config_root_path");
+
+        setupGUI();
         storage = new ImageStorage();
         processer = new Processer(storage);
         imgProvider = new ImageProvider(storage, processer);
 
-        setupGUI();
         new Thread(imgProvider).start();
         new Thread(processer).start();
     }
@@ -345,6 +356,13 @@ public class MainPanel extends JFrame {
     }
 
     public static void main(String[] args) {
-        new MainPanel();
+        try {
+            new MainPanel();
+        } catch (FileNotFoundException e) {
+            JOptionPane.showMessageDialog(null, "找不到配置文件。", "错误",
+                    JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+            return;
+        }
     }
 }
