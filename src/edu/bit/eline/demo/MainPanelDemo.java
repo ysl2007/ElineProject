@@ -38,7 +38,7 @@ import edu.bit.eline.detection.ImageConverter;
 import edu.bit.eline.recognise.feature.ExtractFeature;
 import edu.bit.eline.recognise.svm.ImageClassification;
 
-public class MainPanel extends JFrame {
+public class MainPanelDemo extends JFrame {
     private static final long serialVersionUID = -8054742885149944542L;
 
     private Detection         detection;
@@ -128,7 +128,7 @@ public class MainPanel extends JFrame {
         }
     }
 
-    public MainPanel() {
+    public MainPanelDemo() {
         setupGUI();
     }
 
@@ -310,6 +310,6 @@ public class MainPanel extends JFrame {
     }
 
     public static void main(String[] args) {
-        new MainPanel();
+        new MainPanelDemo();
     }
 }
