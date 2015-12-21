@@ -6,6 +6,8 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.swing.JOptionPane;
+
 import org.bytedeco.javacpp.opencv_core.CvRect;
 import org.bytedeco.javacpp.opencv_core.IplImage;
 import org.bytedeco.javacpp.opencv_core.Mat;
@@ -25,6 +27,7 @@ public class Processer implements Runnable {
     private BlobAnalyzer                                      analyzer;
     private ExtractFeature                                    featureExt;
     private ImageClassification                               classifier;
+    private SQLConnection                                     dbconn;
 
     public Processer(ImageStorage store) {
         this.store = store;
@@ -32,6 +35,7 @@ public class Processer implements Runnable {
         converter = new ImageConverter();
         featureExt = new ExtractFeature();
         classifier = new ImageClassification();
+        dbconn = new SQLConnection();
     }
 
     public List<String> getRunningLine() {
@@ -105,7 +109,28 @@ public class Processer implements Runnable {
                         param.tempscaleimgfeaturepath,
                         param.tempimageresultpath);
                 if (!label.equals("0.0")) {
-                    // TODO: Database manipulation.
+                    if (dbconn == null) {
+                        JOptionPane.showMessageDialog(null,
+                                "数据库连接错误！所有线路的运行即将停止。", "致命错误",
+                                JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
+                    int retry = 0;
+                    while (dbconn.isClosed() && retry < 10) {
+                        dbconn.connect();
+                        try {
+                            Thread.sleep(5000);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    if (retry == 10) {
+                        JOptionPane.showMessageDialog(null,
+                                "数据库连接错误！所有线路的运行即将停止。", "致命错误",
+                                JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
+                    // TODO: db manipulation.
                 }
             }
         }

@@ -216,7 +216,7 @@ public class ModelManager extends JFrame {
     private void finalSettings() {
         this.setContentPane(container);
         setSize(650, 500);
-        setTitle("Model Manager");
+        setTitle("模型管理器");
         setVisible(true);
         setResizable(true);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);

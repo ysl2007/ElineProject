@@ -27,9 +27,10 @@ public class TrainHelper {
 
     private final String        configFile         = "./config.json";
     private String              modelPath;
-    private String              imagespath;
     private String              tempPath;
     private String              featPath;
+    private String              posPath;
+    private String              negPath;
 
     private String              tempoptmodelpath;
     private String              tempoptresultpath;
@@ -47,7 +48,8 @@ public class TrainHelper {
     private String[]            classes            = { "0.0", "0.0" };
     private int                 status             = -1;
 
-    public TrainHelper(String lineName, String posClass) {
+    public TrainHelper(String lineName, String posClass, String posPath,
+            String negPath) {
         JSONTokener tokener;
         try {
             tokener = new JSONTokener(new FileReader(configFile));
@@ -69,7 +71,6 @@ public class TrainHelper {
         }
 
         modelPath = rootPath + "\\models\\" + lineName + "\\";
-        imagespath = modelPath + "classes" + "\\";
         tempPath = modelPath + "temp" + "\\";
         featPath = modelPath + "features" + "\\";
 
@@ -80,11 +81,13 @@ public class TrainHelper {
         trainfeaturepath = featPath + "features.feature.scale.train";
         predictfeaturepath = featPath + "features.feature.scale.predict";
         scaleparamspath = modelPath + "scale.params";
-        finalmodelpath = modelPath + "finalmodelpath";
+        finalmodelpath = modelPath + "final.model";
 
         ef = new ExtractFeature();
         ic = new ImageClassification();
         classes[1] = posClass;
+        this.posPath = posPath;
+        this.negPath = negPath;
         status = 0;
     }
 
@@ -100,18 +103,20 @@ public class TrainHelper {
         dir = new File(tempPath);
         if (!dir.exists())
             dir.mkdir();
-        dir = new File(imagespath);
-        if (!dir.exists())
-            dir.mkdir();
         dir = new File(featPath);
         if (!dir.exists())
             dir.mkdir();
         status = 1;
     }
 
-    public void featureExtract() {
-        ef.extractFoldfeature(imagespath, featurepath);
+    public int featureExtract() {
+        int result = ef.extractFoldfeature(posPath, negPath, featurepath,
+                classes[1]);
+        if (result == 0) {
+            return 0;
+        }
         status = 2;
+        return 1;
     }
 
     public void featureNorm() {

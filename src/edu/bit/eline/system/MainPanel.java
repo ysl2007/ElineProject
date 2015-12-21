@@ -7,11 +7,15 @@ import java.awt.Container;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Stack;
@@ -32,10 +36,13 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
 
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
 import edu.bit.eline.detection.Detector;
+import edu.bit.eline.system.run.HttpInterface;
 import edu.bit.eline.system.run.ImageProvider;
 import edu.bit.eline.system.run.ImageStorage;
 import edu.bit.eline.system.run.Processer;
@@ -65,6 +72,8 @@ public class MainPanel extends JFrame {
     private JButton           stopAll;
     private JScrollPane       treeController;
 
+    ModelManager              mm;
+
     class TreeCellRenderer extends DefaultTreeCellRenderer {
         private static final long serialVersionUID = -8890987966973311991L;
 
@@ -76,7 +85,7 @@ public class MainPanel extends JFrame {
                     leaf, row, hasFocus);
             DefaultMutableTreeNode node = (DefaultMutableTreeNode) value;
             String lineName = (String) node.getUserObject();
-            File modelFile = new File("./config/" + lineName);
+            File modelFile = new File(configPath + "models/" + lineName);
             if (modelFile.exists()) {
                 setForeground(Color.RED);
             }
@@ -89,6 +98,7 @@ public class MainPanel extends JFrame {
         JSONTokener tokener = new JSONTokener(new FileReader(configFile));
         JSONObject jo = new JSONObject(tokener);
         configPath = jo.getString("config_root_path");
+        configPath += "/";
 
         setupGUI();
         storage = new ImageStorage();
@@ -106,7 +116,9 @@ public class MainPanel extends JFrame {
         getTree.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (!getCameraTreeDemo()) {
+                if (getCameraTreeFromWeb()) {
+                    System.out.println("Device tree obtained.");
+                } else {
                     JOptionPane.showMessageDialog(null, "获取设备树失败。", "发生错误",
                             JOptionPane.WARNING_MESSAGE);
                 }
@@ -180,7 +192,8 @@ public class MainPanel extends JFrame {
                 DefaultMutableTreeNode tree = (DefaultMutableTreeNode) treePanel
                         .getModel().getRoot();
                 List<String> cameraList = getAllLeaf(tree);
-                new ModelManager(cameraList);
+                mm = new ModelManager(cameraList);
+
             }
         });
 
@@ -225,6 +238,7 @@ public class MainPanel extends JFrame {
 
         // 中部设备树
         treePanel = new JTree();
+        getCameraTreeFromFile();
         treePanel.setCellRenderer(new TreeCellRenderer());
         treePanel.addTreeSelectionListener(new TreeSelectionListener() {
             @Override
@@ -264,18 +278,56 @@ public class MainPanel extends JFrame {
         finalSettings();
     }
 
-    protected boolean getCameraTree() {
-        // TODO: getCameraTree
-        return false;
+    protected boolean getCameraTreeFromWeb() {
+        String jsonTree = HttpInterface.getDeviceTree();
+        if (jsonTree == null || jsonTree.trim().length() == 0) {
+            return false;
+        }
+        try {
+            DefaultTreeModel dt = parseJsonTree(jsonTree);
+            treePanel.setModel(dt);
+        } catch (Exception e) {
+            return false;
+        }
+        return true;
     }
 
-    private boolean getCameraTreeDemo() {
-        DefaultMutableTreeNode root = new DefaultMutableTreeNode("Root");
-        root.add(new DefaultMutableTreeNode("child1"));
-        root.add(new DefaultMutableTreeNode("child2"));
-        DefaultTreeModel dt = new DefaultTreeModel(root);
-        treePanel.setModel(dt);
+    private boolean getCameraTreeFromFile() {
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(
+                new FileInputStream("./deviceTree.json"), "utf-8"))) {
+            String jsonTree = br.readLine();
+            DefaultTreeModel dt = parseJsonTree(jsonTree);
+            treePanel.setModel(dt);
+        } catch (Exception e) {
+            return false;
+        }
         return true;
+    }
+
+    private DefaultTreeModel parseJsonTree(String jsonStr) throws JSONException {
+        // System.out.println(jsonStr);
+        JSONArray topArr = new JSONArray(jsonStr);
+        DefaultMutableTreeNode root = new DefaultMutableTreeNode("根节点");
+        recursiveParse(topArr, root, null);
+        return new DefaultTreeModel(root);
+    }
+
+    private void recursiveParse(JSONArray arr, DefaultMutableTreeNode father,
+            String fatName) throws JSONException {
+        for (int i = 0; i < arr.length(); ++i) {
+            JSONObject obj = arr.getJSONObject(i);
+            String name = obj.getString("text");
+            if (obj.has("children")) {
+                JSONArray childArr = obj.getJSONArray("children");
+                DefaultMutableTreeNode node = new DefaultMutableTreeNode(name);
+                father.add(node);
+                int index = name.indexOf("(");
+                index = index == -1 ? name.length() : index;
+                recursiveParse(childArr, node, name.substring(0, index));
+            } else {
+                father.add(new DefaultMutableTreeNode(fatName + name));
+            }
+        }
     }
 
     private boolean isRunning(String lineName) {
@@ -342,13 +394,14 @@ public class MainPanel extends JFrame {
                 }
             }
         }
+        Collections.sort(retList);
         return retList;
     }
 
     private void finalSettings() {
         this.setContentPane(container);
         setSize(500, 500);
-        setTitle("Demo");
+        setTitle("主界面");
         setVisible(true);
         setResizable(true);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

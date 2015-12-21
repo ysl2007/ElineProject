@@ -58,4 +58,24 @@ public class ImageProvider implements Runnable {
             }
         }
     }
+    
+    public void test(){
+    	String line = "安朝线62";
+    	String st = "2015-12-17 12:00:00";
+    	String et = "2015-12-17 15:00:00";
+    	List<String> pathList = HttpInterface.getImageList(line, st, et);
+//    	System.out.println(pathList);
+    	for (String path : pathList) {
+    		System.out.println(path);
+            BufferedImage bimg = HttpInterface.getImage(path);
+            System.out.println(bimg);
+    	}
+    }
+    
+    public static void main(String[] args) {
+    	ImageStorage storage = new ImageStorage();
+    	Processer processer = new Processer(storage);
+		ImageProvider p = new ImageProvider(storage, processer);
+		p.test();
+	}
 }
