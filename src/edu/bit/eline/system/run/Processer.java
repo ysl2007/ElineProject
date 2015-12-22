@@ -1,11 +1,14 @@
 package edu.bit.eline.system.run;
 
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.imageio.ImageIO;
 import javax.swing.JOptionPane;
 
 import org.bytedeco.javacpp.opencv_core.CvRect;
@@ -93,6 +96,7 @@ public class Processer implements Runnable {
             int timeEndIndex = imgFilename.indexOf("_", timeMidIndex + 1);
             String date = imgFilename.substring(timeBegIndex, timeMidIndex);
             String time = imgFilename.substring(timeMidIndex + 1, timeEndIndex);
+            String datetime = date + " " + time;
             BufferedImage bimg = imgPair.getVal();
             Pair<Detector, Params> detPair;
             synchronized (detMap) {
@@ -141,7 +145,28 @@ public class Processer implements Runnable {
                                 JOptionPane.ERROR_MESSAGE);
                         return;
                     }
-                    System.out.println(lineName + " " + label + x + " " + "y" + " " + width + " " + height);
+                    System.out.println(lineName + " " + label + x + " " + "y"
+                            + " " + width + " " + height);
+                    ByteArrayOutputStream out = new ByteArrayOutputStream();
+                    try {
+                        ImageIO.write(bimg, "jpg", out);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        continue;
+                    }
+                    String sql = "INSERT INTO AlarmInfo(ImageId, FileName, FileContent, ImageTime, DetectTime, LineName, CameraName, RistType, LabelType"
+                            + " VALUES ('"
+                            + imgFilename + "','"
+                            + imgFilename + "','"
+                            + out.toByteArray() + "','"
+                            + datetime + "','"
+                            + "DATE()" + "','"
+                            + lineName + "','"
+                            + lineName + "','" + label + "','" + "Auto" + "')";
+                    boolean status = dbconn.insert(sql);
+                    if (status == true) {
+                        break;
+                    }
                 }
             }
         }
