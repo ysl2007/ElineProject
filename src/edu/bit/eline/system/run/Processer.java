@@ -28,6 +28,7 @@ public class Processer implements Runnable {
     private ExtractFeature                                    featureExt;
     private ImageClassification                               classifier;
     private SQLConnection                                     dbconn;
+    private int                                               maxRetry = 5;
 
     public Processer(ImageStorage store) {
         this.store = store;
@@ -83,9 +84,11 @@ public class Processer implements Runnable {
     @Override
     public void run() {
         while (!Thread.interrupted()) {
-            Pair<String, BufferedImage> pair = store.get();
+            Pair<String, Pair<String, BufferedImage>> pair = store.get();
             String lineName = pair.getKey();
-            BufferedImage bimg = pair.getVal();
+            Pair<String, BufferedImage> imgPair = pair.getVal();
+            String imgFilename = imgPair.getKey();
+            BufferedImage bimg = imgPair.getVal();
             Pair<Detector, Params> detPair;
             synchronized (detMap) {
                 if (!detMap.containsKey(lineName)) {
@@ -116,7 +119,7 @@ public class Processer implements Runnable {
                         return;
                     }
                     int retry = 0;
-                    while (dbconn.isClosed() && retry < 10) {
+                    while (dbconn.isClosed() && retry < maxRetry) {
                         dbconn.connect();
                         try {
                             Thread.sleep(5000);
@@ -124,7 +127,7 @@ public class Processer implements Runnable {
                             e.printStackTrace();
                         }
                     }
-                    if (retry == 10) {
+                    if (retry == maxRetry) {
                         JOptionPane.showMessageDialog(null,
                                 "数据库连接错误！所有线路的运行即将停止。", "致命错误",
                                 JOptionPane.ERROR_MESSAGE);

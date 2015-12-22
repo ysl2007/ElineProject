@@ -1,6 +1,7 @@
 package edu.bit.eline.system.run;
 
 import java.awt.image.BufferedImage;
+import java.net.URLDecoder;
 import java.text.SimpleDateFormat;
 import java.util.ArrayDeque;
 import java.util.Calendar;
@@ -34,7 +35,7 @@ public class ImageProvider implements Runnable {
             rightNow.roll(Calendar.MINUTE, 5);
             String begTime = format.format(lastTime.getTime());
             String endTime = format.format(rightNow.getTime());
-            rightNow.roll(Calendar.MINUTE, -15);
+            rightNow.roll(Calendar.MINUTE, -10);
             lastTime = rightNow;
             for (String lineName : runningLines) {
                 pathList = HttpInterface.getImageList(lineName, begTime,
@@ -44,11 +45,23 @@ public class ImageProvider implements Runnable {
                     if (bimg == null || usedPicQueue.contains(path)) {
                         continue;
                     }
+                    String imgFilename = null;
+                    try {
+                        imgFilename = URLDecoder.decode(path, "UTF-8");
+                        int index = imgFilename.lastIndexOf("/");
+                        imgFilename = imgFilename.substring(index, imgFilename.length());
+                        
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        continue;
+                    }
                     while (usedPicQueue.size() >= maxCapacity) {
                         usedPicQueue.removeFirst();
                     }
                     usedPicQueue.add(path);
-                    storage.put(new Pair<String, BufferedImage>(lineName, bimg));
+                    Pair<String, BufferedImage> imgPair = new Pair<String, BufferedImage>(
+                            imgFilename, bimg);
+                    storage.put(new Pair<String, Pair<String, BufferedImage>>(lineName, imgPair));
                 }
             }
             try {
@@ -58,24 +71,24 @@ public class ImageProvider implements Runnable {
             }
         }
     }
-    
-    public void test(){
-    	String line = "安朝线62";
-    	String st = "2015-12-17 12:00:00";
-    	String et = "2015-12-17 15:00:00";
-    	List<String> pathList = HttpInterface.getImageList(line, st, et);
-//    	System.out.println(pathList);
-    	for (String path : pathList) {
-    		System.out.println(path);
+
+    public void test() {
+        String line = "安朝线62";
+        String st = "2015-12-17 12:00:00";
+        String et = "2015-12-17 15:00:00";
+        List<String> pathList = HttpInterface.getImageList(line, st, et);
+        // System.out.println(pathList);
+        for (String path : pathList) {
+            System.out.println(path);
             BufferedImage bimg = HttpInterface.getImage(path);
             System.out.println(bimg);
-    	}
+        }
     }
-    
+
     public static void main(String[] args) {
-    	ImageStorage storage = new ImageStorage();
-    	Processer processer = new Processer(storage);
-		ImageProvider p = new ImageProvider(storage, processer);
-		p.test();
-	}
+        ImageStorage storage = new ImageStorage();
+        Processer processer = new Processer(storage);
+        ImageProvider p = new ImageProvider(storage, processer);
+        p.test();
+    }
 }
