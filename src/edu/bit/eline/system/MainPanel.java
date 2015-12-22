@@ -335,7 +335,7 @@ public class MainPanel extends JFrame {
     }
 
     private Params initRunner(String lineName, boolean quiet) {
-        String modelPath = configPath + lineName;
+        String modelPath = configPath + "/models/" + lineName;
         if (!(new File(modelPath).exists())) {
             if (!quiet) {
                 JOptionPane.showMessageDialog(null, "模型文件不存在。", "遇到问题",

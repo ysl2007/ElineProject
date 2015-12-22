@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.imageio.ImageIO;
+import javax.swing.JProgressBar;
 
 import net.semanticmetadata.lire.imageanalysis.AutoColorCorrelogram;
 import net.semanticmetadata.lire.imageanalysis.CEDD;
@@ -20,7 +21,25 @@ import net.semanticmetadata.lire.imageanalysis.FCTH;
 import net.semanticmetadata.lire.imageanalysis.ScalableColor;
 import net.semanticmetadata.lire.imageanalysis.Tamura;
 
-public class ExtractFeature {
+public class ExtractFeature implements Runnable {
+    private String  posPath;
+    private String  negPath;
+    private String  featurefilepath;
+    private String  pos;
+    private boolean status = false;
+    private JProgressBar proBar;
+
+    public ExtractFeature() {
+    }
+
+    public ExtractFeature(String posPath, String negPath, String feature,
+            String pos, JProgressBar proBar) {
+        this.posPath = posPath;
+        this.negPath = negPath;
+        this.featurefilepath = feature;
+        this.pos = pos;
+        this.proBar = proBar;
+    }
 
     public void generateSubImg(String sourcefoldpath, String destfoldpath) {
         String[] filelist = getTextFileList(sourcefoldpath);
@@ -127,8 +146,6 @@ public class ExtractFeature {
         Tamura tm = new Tamura();
         String features = "";
         try {
-            // File imgfile=new File(filepath);
-            // subimg=ImageIO.read(imgfile);
             ac.extract(subimg);
             features = features + "AutoColorCorrelogram: "
                     + ac.getStringRepresentation() + ";@";
@@ -201,10 +218,6 @@ public class ExtractFeature {
     public String formatfeatures(String sourcefeature) {
         String[] strarrs = sourcefeature.split("@");
         String featurestr = "";
-
-        // featurestr+=strarrs[0].substring(strarrs[0].indexOf(" ", 0),
-        // strarrs[0].length()-1).trim();
-        // featurestr+=" ";
         featurestr += strarrs[1].substring(strarrs[1].indexOf(" ", 7),
                 strarrs[1].length() - 1).trim();
         featurestr += " ";
@@ -237,22 +250,24 @@ public class ExtractFeature {
         return result;
     }
 
-    // 提取一个文件夹下所有文件的特征，文件夹下的子文件夹是子类，包括crane,pump,tower,diggerLoader,fog
-    public int extractFoldfeature(String posPath, String negPath,
-            String featurefilepath, String pos) {
+    public void extractFoldfeature() {
         String posClass = Character.toString(pos.charAt(0));
         BufferedWriter outFile = null;
         try {
             outFile = new BufferedWriter(new FileWriter(featurefilepath));
             String[] posImageList = getImgFilelist(posPath);
             String[] negImageList = getImgFilelist(negPath);
-
+            int imgNums = posImageList.length + negImageList.length;
+            int curImg = 0;
+            proBar.setMaximum(imgNums);
             if (posImageList.length > 0) {
                 for (int j = 0; j < posImageList.length; j++) {
                     String features = extractIMGfeature(posImageList[j]);
                     String featurestr = posClass + " " + features;
                     outFile.write(featurestr + "\n");
                     System.out.println(featurestr);
+                    curImg += 1;
+                    proBar.setValue(curImg);
                 }
             }
             if (negImageList.length > 0) {
@@ -264,7 +279,7 @@ public class ExtractFeature {
                 }
             }
             outFile.close();
-            return 1;
+            status = true;
         } catch (Exception e) {
             try {
                 outFile.close();
@@ -272,15 +287,16 @@ public class ExtractFeature {
                 e1.printStackTrace();
             }
             e.printStackTrace();
-            return 0;
+            status = false;
         }
-
     }
 
-    public static void main(String[] args) {
-        // ExtractFeature ef = new ExtractFeature();
-        // ef.generateSubImg("E:/电网项目/train/2", "E:/电网项目/train/classes");
-        // ef.extractFoldfeature("E:/电网项目/train/classes",
-        // "E:/电网项目/train/feature.feature");
+    @Override
+    public void run() {
+        extractFoldfeature();
+    }
+
+    public boolean getStatus() {
+        return status;
     }
 }

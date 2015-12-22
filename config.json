@@ -1,5 +1,5 @@
 {
-    "config_root_path" : "E:\\国网项目\\config\\",
+    "config_root_path" : "d:\\work\\config\\",
     "database_url" : "jdbc:sqlserver://10.156.121.47;databaseName=ElectVideoMonitorSys",
     "database_username" : "sa",
     "database_password" : "bit100081",

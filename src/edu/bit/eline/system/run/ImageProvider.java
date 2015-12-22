@@ -21,7 +21,7 @@ public class ImageProvider implements Runnable {
         this.processer = processer;
         this.format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         this.lastTime = Calendar.getInstance();
-        this.lastTime.roll(Calendar.MINUTE, -10);
+        this.lastTime.add(Calendar.MINUTE, -10);
         this.usedPicQueue = new ArrayDeque<String>();
     }
 
@@ -32,14 +32,16 @@ public class ImageProvider implements Runnable {
             List<String> runningLines = processer.getRunningLine();
 
             Calendar rightNow = Calendar.getInstance();
-            rightNow.roll(Calendar.MINUTE, 5);
+            rightNow.add(Calendar.MINUTE, 5);
             String begTime = format.format(lastTime.getTime());
             String endTime = format.format(rightNow.getTime());
-            rightNow.roll(Calendar.MINUTE, -10);
+            rightNow.add(Calendar.MINUTE, -20);
             lastTime = rightNow;
             for (String lineName : runningLines) {
+//            	System.out.println(begTime + " " + endTime);
                 pathList = HttpInterface.getImageList(lineName, begTime,
                         endTime);
+                System.out.println(pathList.size());
                 for (String path : pathList) {
                     BufferedImage bimg = HttpInterface.getImage(path);
                     if (bimg == null || usedPicQueue.contains(path)) {
@@ -48,7 +50,7 @@ public class ImageProvider implements Runnable {
                     String imgFilename = null;
                     try {
                         imgFilename = URLDecoder.decode(path, "UTF-8");
-                        int index = imgFilename.lastIndexOf("/");
+                        int index = imgFilename.lastIndexOf("/") + 1;
                         imgFilename = imgFilename.substring(index, imgFilename.length());
                         
                     } catch (Exception e) {
@@ -65,23 +67,25 @@ public class ImageProvider implements Runnable {
                 }
             }
             try {
-                Thread.sleep(60000);
+                Thread.sleep(5000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
+            System.out.println("while loop in provider...");
         }
     }
 
     public void test() {
-        String line = "安朝线62";
-        String st = "2015-12-17 12:00:00";
-        String et = "2015-12-17 15:00:00";
+        String line = "安都17(动态风险)";
+        String st = "2015-12-22 14:20:00";
+        String et = "2015-12-22 15:55:00";
         List<String> pathList = HttpInterface.getImageList(line, st, et);
         // System.out.println(pathList);
+        System.out.println(pathList.size());
         for (String path : pathList) {
             System.out.println(path);
-            BufferedImage bimg = HttpInterface.getImage(path);
-            System.out.println(bimg);
+//            BufferedImage bimg = HttpInterface.getImage(path);
+//            System.out.println(bimg);
         }
     }
 

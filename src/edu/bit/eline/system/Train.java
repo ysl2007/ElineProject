@@ -17,7 +17,6 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
-import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -380,13 +379,8 @@ public class Train extends JFrame {
             return;
         }
 
-        // JDialog waitDialog = new JDialog(this, true);
-        // waitDialog.setSize(200, 100);
-        // waitDialog.setVisible(true);
-        // waitDialog.add(new JLabel("Hello!"));
-
-        int status = tHelper.featureExtract();
-        if (status != 1) {
+        boolean status = tHelper.featureExtract(progressBar);
+        if (!status) {
             JOptionPane.showMessageDialog(null, "特征提取出现错误。", "错误",
                     JOptionPane.ERROR_MESSAGE);
             return;

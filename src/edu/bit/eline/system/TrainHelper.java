@@ -7,6 +7,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 import javax.swing.JOptionPane;
+import javax.swing.JProgressBar;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -83,7 +84,6 @@ public class TrainHelper {
         scaleparamspath = modelPath + "scale.params";
         finalmodelpath = modelPath + "final.model";
 
-        ef = new ExtractFeature();
         ic = new ImageClassification();
         classes[1] = posClass;
         this.posPath = posPath;
@@ -109,14 +109,23 @@ public class TrainHelper {
         status = 1;
     }
 
-    public int featureExtract() {
-        int result = ef.extractFoldfeature(posPath, negPath, featurepath,
-                classes[1]);
-        if (result == 0) {
-            return 0;
+    public boolean featureExtract(JProgressBar proBar) {
+        ef = new ExtractFeature(posPath, negPath, featurepath, classes[1], proBar);
+        Thread thread = new Thread(ef);
+        thread.start();
+        while (thread.isAlive()) {
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
-        status = 2;
-        return 1;
+        if (ef.getStatus()) {
+            status = 2;
+            return true;
+        } else {
+            return false;
+        }
     }
 
     public void featureNorm() {
@@ -150,17 +159,4 @@ public class TrainHelper {
         writer.close();
         status = 6;
     }
-
-    // public static void main(String[] args) {
-    // String result =
-    // "Best C: 2.0 Best G: 0.00390625 Best Acc: 0.9974358677864075";
-    // int idx1 = result.indexOf(':') + 2;
-    // int idx2 = result.indexOf(' ', idx1);
-    // double c = Double.valueOf(result.substring(idx1, idx2));
-    // idx1 = result.indexOf(':', idx2) + 2;
-    // idx2 = result.indexOf(' ', idx1);
-    // double g = Double.valueOf(result.substring(idx1, idx2));
-    // String params = "-t 2 -c " + c + " -g " + g;
-    // System.out.println(params);
-    // }
 }
