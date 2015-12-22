@@ -93,6 +93,7 @@ public class Processer implements Runnable {
             int timeEndIndex = imgFilename.indexOf("_", timeMidIndex + 1);
             String date = imgFilename.substring(timeBegIndex, timeMidIndex);
             String time = imgFilename.substring(timeMidIndex + 1, timeEndIndex);
+            String datetime = date + " " + time;
             BufferedImage bimg = imgPair.getVal();
             Pair<Detector, Params> detPair;
             synchronized (detMap) {
@@ -141,7 +142,11 @@ public class Processer implements Runnable {
                                 JOptionPane.ERROR_MESSAGE);
                         return;
                     }
-                    System.out.println(lineName + " " + label + x + " " + "y" + " " + width + " " + height);
+                    String sql = "Insert into Table_AlarmInfo () Values(";
+                    boolean status = dbconn.insert(sql);
+                    if (status == true) {
+                        break;
+                    }
                 }
             }
         }
