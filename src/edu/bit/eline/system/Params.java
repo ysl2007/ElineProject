@@ -55,12 +55,12 @@ public class Params {
 
         BufferedReader reader = new BufferedReader(new FileReader(new File(
                 modelPath + "recog.params")));
-        reader.close();
         String params = reader.readLine();
         String[] paramList = params.split(" ");
         varThrshVal = Float.valueOf(paramList[0]);
         alphaVal = Double.valueOf(paramList[1]);
         minAreaVal = Integer.valueOf(paramList[2]);
+        reader.close();
     }
 
     public boolean checkParams() {
