@@ -109,9 +109,10 @@ public class TrainHelper {
         status = 1;
     }
 
-    public void featureExtract(JProgressBar proBar) {
+    public void featureExtract(JProgressBar proBar, boolean incraseTrain) {
         ef = new ExtractFeature(posPath, negPath, featurepath, classes[1],
                 proBar);
+        ef.setFolders(posPath, negPath, featurepath);
         new Thread(ef).start();
     }
 

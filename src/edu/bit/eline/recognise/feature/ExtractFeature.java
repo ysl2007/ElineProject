@@ -1,7 +1,6 @@
 package edu.bit.eline.recognise.feature;
 
 import java.awt.image.BufferedImage;
-import java.awt.image.RasterFormatException;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -22,117 +21,35 @@ import net.semanticmetadata.lire.imageanalysis.ScalableColor;
 import net.semanticmetadata.lire.imageanalysis.Tamura;
 
 public class ExtractFeature implements Runnable {
-    private String       posPath;
+    private String       towerPath;
+    private String       groundPath;
     private String       negPath;
     private String       featurefilepath;
-    private String       pos;
-    private boolean      goOn = true;
+//    private String       pos;
+    private boolean      goOn         = true;
+    private boolean      increase     = false;
+    private boolean      folderStatus = false;
     private JProgressBar proBar;
 
     public ExtractFeature() {
     }
 
-    public ExtractFeature(String posPath, String negPath, String feature,
-            String pos, JProgressBar proBar) {
-        this.posPath = posPath;
+    public ExtractFeature(JProgressBar proBar, boolean increase) {
+        this.proBar = proBar;
+        this.increase = increase;
+    }
+
+    public void setFolders(String towerPath, String groundPath, String negPath,
+            String feature) {
+        this.towerPath = towerPath;
+        this.groundPath = groundPath;
         this.negPath = negPath;
         this.featurefilepath = feature;
-        this.pos = pos;
-        this.proBar = proBar;
+        folderStatus = true;
     }
 
-    public void generateSubImg(String sourcefoldpath, String destfoldpath) {
-        String[] filelist = getTextFileList(sourcefoldpath);
-        for (int i = 0; i < filelist.length; i++) {
-            AnnotationAnalysis aa = new AnnotationAnalysis(filelist[i]);
-            String rect = aa.getRect();
-            String lefttop = rect.substring(0, rect.indexOf(";"));
-            String rightlow = rect.substring(rect.indexOf(";") + 1,
-                    rect.length());
-            int lefttopx = Integer.parseInt(lefttop.substring(0,
-                    lefttop.indexOf(",")));
-            int lefttopy = Integer.parseInt(lefttop.substring(
-                    lefttop.indexOf(",") + 1, lefttop.length()));
-            int rightlowx = Integer.parseInt(rightlow.substring(0,
-                    rightlow.indexOf(",")));
-            int rightlowy = Integer.parseInt(rightlow.substring(
-                    rightlow.indexOf(",") + 1, rightlow.length()));
-
-            if (lefttopx == rightlowx || lefttopy == rightlowy) {
-                ;
-            } else {
-                try {
-                    File imgfile = new File(aa.getfilepath() + "/"
-                            + aa.getfileName());
-                    BufferedImage bi = ImageIO.read(imgfile);
-                    BufferedImage subimg = null;
-                    subimg = bi.getSubimage(lefttopx, lefttopy, rightlowx
-                            - lefttopx, rightlowy - lefttopy);
-                    ImageIO.write(subimg, "BMP", new File(destfoldpath + "/"
-                            + aa.getobjType().trim() + "/" + aa.getfileName()
-                            + ".sub.bmp"));
-
-                } catch (IOException e) {
-                    e.printStackTrace();
-
-                } catch (RasterFormatException e) {
-                    e.printStackTrace();
-
-                } catch (NullPointerException e) {
-                    e.printStackTrace();
-
-                }
-            }
-        }
-    }
-
-    public String[] getTextFileList(String foldpath) {
-        File rootDir = new File(foldpath);
-        String[] subDirs = rootDir.list();
-        List<String> list = new ArrayList<String>();
-        for (int i = 0; i < subDirs.length; ++i) {
-            String subdir = new String(rootDir.getAbsolutePath() + "\\"
-                    + subDirs[i] + "\\");
-            File dir = new File(subdir);
-
-            File[] imgs = dir.listFiles(new FilenameFilter() {
-                public boolean accept(File dir, String name) {
-                    return name.toLowerCase().endsWith("txt");
-                }
-            });
-            for (int j = 0; j < imgs.length; j++) {
-                list.add(imgs[j].getAbsolutePath());
-            }
-        }
-
-        String strings[] = new String[list.size()];
-        for (int i = 0, j = list.size(); i < j; i++) {
-            strings[i] = list.get(i);
-        }
-        return strings;
-    }
-
-    public String[] getImgFilelist(String foldpath) {
-        List<String> list = new ArrayList<String>();
-        File dir = new File(foldpath);
-        File[] imgs = dir.listFiles(new FilenameFilter() {
-            public boolean accept(File dir, String name) {
-                return name.toLowerCase().endsWith("bmp")
-                        || name.toLowerCase().endsWith("jpg");
-            }
-        });
-        if (imgs.length > 0) {
-            for (int j = 0; j < imgs.length; j++) {
-                list.add(imgs[j].getAbsolutePath());
-            }
-
-            String strings[] = new String[list.size()];
-            for (int i = 0, j = list.size(); i < j; i++)
-                strings[i] = list.get(i);
-
-            return strings;
-        } else
-            return null;
+    public void setRunFlag(boolean status) {
+        goOn = status;
     }
 
     // 提取一个图像的特征
@@ -215,42 +132,40 @@ public class ExtractFeature implements Runnable {
         }
     }
 
-    public String formatfeatures(String sourcefeature) {
-        String[] strarrs = sourcefeature.split("@");
-        String featurestr = "";
-        featurestr += strarrs[1].substring(strarrs[1].indexOf(" ", 7),
-                strarrs[1].length() - 1).trim();
-        featurestr += " ";
-        featurestr += strarrs[2].substring(strarrs[2].indexOf(" ", 0),
-                strarrs[2].length() - 1).trim();
-        featurestr += " ";
-        featurestr += strarrs[3].substring(strarrs[3].indexOf(";", 20) + 1,
-                strarrs[3].length() - 1).trim();
-        featurestr += " ";
-        featurestr += strarrs[4].substring(strarrs[4].indexOf(";", 31) + 1,
-                strarrs[4].length() - 1).trim();
-        featurestr += " ";
-        featurestr += strarrs[5].substring(strarrs[5].indexOf(" ", 7) + 1,
-                strarrs[5].length() - 1).trim();
-        featurestr += " ";
-        featurestr += strarrs[6].substring(strarrs[6].indexOf(" ", 10) + 1,
-                strarrs[6].length() - 1).trim();
-
-        return addnum(featurestr);
-    }
-
-    public String addnum(String str) {
-
-        String[] arrs = str.split(" |z");
-        String result = "";
-        for (int i = 0; i < arrs.length; i++) {
-            String temp = arrs[i].trim();
-            result = result + " " + Integer.toString(i + 1) + ":" + temp;
+    @Override
+    public void run() {
+        extractFoldfeature();
+        if (increase) {
+            extractDBFeature();
+        } else {
+            proBar.setValue(proBar.getMaximum());
         }
-        return result;
     }
 
-    public void extractFoldfeature() {
+    private String[] getImgFilelist(String foldpath) {
+        List<String> list = new ArrayList<String>();
+        File dir = new File(foldpath);
+        File[] imgs = dir.listFiles(new FilenameFilter() {
+            public boolean accept(File dir, String name) {
+                return name.toLowerCase().endsWith("bmp")
+                        || name.toLowerCase().endsWith("jpg");
+            }
+        });
+        if (imgs.length > 0) {
+            for (int j = 0; j < imgs.length; j++) {
+                list.add(imgs[j].getAbsolutePath());
+            }
+
+            String strings[] = new String[list.size()];
+            for (int i = 0, j = list.size(); i < j; i++)
+                strings[i] = list.get(i);
+
+            return strings;
+        } else
+            return null;
+    }
+
+    private void extractFoldfeature() {
         proBar.setValue(0);
         String posClass = Character.toString(pos.charAt(0));
         BufferedWriter outFile = null;
@@ -265,7 +180,7 @@ public class ExtractFeature implements Runnable {
             String[] negImageList = getImgFilelist(negPath);
             int imgNums = posImageList.length + negImageList.length;
             int curImg = 0;
-            proBar.setMaximum(imgNums);
+            proBar.setMaximum(imgNums + 10);
             if (posImageList.length > 0) {
                 for (int j = 0; j < posImageList.length && goOn; j++) {
                     String features = extractIMGfeature(posImageList[j]);
@@ -297,12 +212,42 @@ public class ExtractFeature implements Runnable {
         }
     }
 
-    @Override
-    public void run() {
-        extractFoldfeature();
+    private String formatfeatures(String sourcefeature) {
+        String[] strarrs = sourcefeature.split("@");
+        String featurestr = "";
+        featurestr += strarrs[1].substring(strarrs[1].indexOf(" ", 7),
+                strarrs[1].length() - 1).trim();
+        featurestr += " ";
+        featurestr += strarrs[2].substring(strarrs[2].indexOf(" ", 0),
+                strarrs[2].length() - 1).trim();
+        featurestr += " ";
+        featurestr += strarrs[3].substring(strarrs[3].indexOf(";", 20) + 1,
+                strarrs[3].length() - 1).trim();
+        featurestr += " ";
+        featurestr += strarrs[4].substring(strarrs[4].indexOf(";", 31) + 1,
+                strarrs[4].length() - 1).trim();
+        featurestr += " ";
+        featurestr += strarrs[5].substring(strarrs[5].indexOf(" ", 7) + 1,
+                strarrs[5].length() - 1).trim();
+        featurestr += " ";
+        featurestr += strarrs[6].substring(strarrs[6].indexOf(" ", 10) + 1,
+                strarrs[6].length() - 1).trim();
+
+        return addnum(featurestr);
     }
 
-    public void setRunFlag(boolean status) {
-        goOn = status;
+    private void extractDBFeature() {
+        sdfasd
+        proBar.setValue(proBar.getMaximum());
+    }
+
+    private String addnum(String str) {
+        String[] arrs = str.split(" |z");
+        String result = "";
+        for (int i = 0; i < arrs.length; i++) {
+            String temp = arrs[i].trim();
+            result = result + " " + Integer.toString(i + 1) + ":" + temp;
+        }
+        return result;
     }
 }

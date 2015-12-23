@@ -7,6 +7,8 @@ import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -15,15 +17,14 @@ import java.io.IOException;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
-import javax.swing.ButtonGroup;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
-import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 
 import org.json.JSONException;
@@ -36,38 +37,36 @@ public class Train extends JFrame {
     private String            selectedClass;
     private String            configFile       = "./config.json";
     private String            rootPath;
+    private boolean           increaseTrain    = false;
 
     private Container         container;
     private JPanel            detParams;
     private JPanel            center;
     private JPanel            topPanel;
     private JPanel            detection;
-    private JPanel            classPanel;
     private JPanel            samplePanel;
     private JPanel            buttonPanel;
     private JPanel            actionPanel;
+    private JPanel            increasePanel;
     private JButton           getReady;
     private JButton           generData;
     private JButton           featExtract;
     private JButton           featNorm;
     private JButton           paramOpti;
     private JButton           train;
-    private JButton           positiveDirBrowse;
+    private JButton           towerDirBrowse;
+    private JButton           groundDirBrowse;
     private JButton           negativeDirBrowse;
     private JButton           exit;
+    private JCheckBox         increase;
     private JTextField        name;
     private JTextField        var;
     private JTextField        alpha;
     private JTextField        minArea;
-    private JTextField        positiveDirField;
+    private JTextField        towerDirField;
+    private JTextField        groundDirField;
     private JTextField        negativeDirField;
-    private ButtonGroup       btGroup;
     private JProgressBar      progressBar;
-    private JRadioButton      craneCheck;
-    private JRadioButton      pumpCheck;
-    private JRadioButton      towerCheck;
-    private JRadioButton      diggerCheck;
-    private JRadioButton      fogCheck;
 
     public Train(String lineName) {
         JSONTokener tokener;
@@ -90,24 +89,6 @@ public class Train extends JFrame {
         }
         setupGUI(lineName);
         finalSettings();
-    }
-
-    class CheckListener implements ActionListener {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            if (craneCheck.isSelected())
-                selectedClass = "1.0";
-            else if (pumpCheck.isSelected())
-                selectedClass = "2.0";
-            else if (towerCheck.isSelected())
-                selectedClass = "3.0";
-            else if (diggerCheck.isSelected())
-                selectedClass = "4.0";
-            else if (fogCheck.isSelected())
-                selectedClass = "5.0";
-            else
-                selectedClass = null;
-        }
     }
 
     protected void setupGUI(String lineName) {
@@ -140,51 +121,12 @@ public class Train extends JFrame {
         detection.add(detParams);
         detection.add(Box.createHorizontalStrut(5));
 
-        // 异常类别部分
-        CheckListener listener = new CheckListener();
-        craneCheck = new JRadioButton("吊车");
-        craneCheck.setAlignmentX(LEFT_ALIGNMENT);
-        craneCheck.addActionListener(listener);
-
-        pumpCheck = new JRadioButton("泵车");
-        pumpCheck.setAlignmentX(LEFT_ALIGNMENT);
-        pumpCheck.addActionListener(listener);
-
-        diggerCheck = new JRadioButton("地面设备");
-        diggerCheck.setAlignmentX(LEFT_ALIGNMENT);
-        diggerCheck.addActionListener(listener);
-
-        towerCheck = new JRadioButton("塔吊");
-        towerCheck.setAlignmentX(LEFT_ALIGNMENT);
-        towerCheck.addActionListener(listener);
-
-        fogCheck = new JRadioButton("烟雾");
-        fogCheck.setAlignmentX(LEFT_ALIGNMENT);
-        fogCheck.addActionListener(listener);
-
-        btGroup = new ButtonGroup();
-        btGroup.add(craneCheck);
-        btGroup.add(pumpCheck);
-        btGroup.add(diggerCheck);
-        btGroup.add(towerCheck);
-        btGroup.add(fogCheck);
-
-        classPanel = new JPanel();
-        classPanel.setBorder(BorderFactory.createTitledBorder("异常类"));
-        classPanel.setLayout(new GridLayout(3, 2));
-        classPanel.setPreferredSize(new Dimension(100, 30));
-        classPanel.add(craneCheck);
-        classPanel.add(pumpCheck);
-        classPanel.add(diggerCheck);
-        classPanel.add(towerCheck);
-        classPanel.add(fogCheck);
-
         // 样本路径选择
-        JLabel positiveDir = new JLabel("正例样本路径：");
-        positiveDirField = new JTextField();
-        positiveDirField.setColumns(10);
-        positiveDirBrowse = new JButton("浏览");
-        positiveDirBrowse.addActionListener(new ActionListener() {
+        JLabel towerDir = new JLabel("杆塔设备样本路径：");
+        towerDirField = new JTextField();
+        towerDirField.setColumns(10);
+        towerDirBrowse = new JButton("浏览");
+        towerDirBrowse.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 JFileChooser dirChooser = new JFileChooser();
@@ -193,16 +135,38 @@ public class Train extends JFrame {
                 if (returnVal == JFileChooser.APPROVE_OPTION) {
                     String selectedDir = dirChooser.getSelectedFile()
                             .getAbsolutePath();
-                    positiveDirField.setText(selectedDir);
+                    towerDirField.setText(selectedDir);
                 }
             }
         });
-        JPanel positive = new JPanel();
-        positive.add(positiveDir);
-        positive.add(positiveDirField);
-        positive.add(positiveDirBrowse);
+        JPanel tower = new JPanel();
+        tower.add(towerDir);
+        tower.add(towerDirField);
+        tower.add(towerDirBrowse);
 
-        JLabel negativeDir = new JLabel("负例样本路径：");
+        JLabel groundDir = new JLabel("杆塔设备样本路径：");
+        groundDirField = new JTextField();
+        groundDirField.setColumns(10);
+        groundDirBrowse = new JButton("浏览");
+        groundDirBrowse.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                JFileChooser dirChooser = new JFileChooser();
+                dirChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+                int returnVal = dirChooser.showOpenDialog(null);
+                if (returnVal == JFileChooser.APPROVE_OPTION) {
+                    String selectedDir = dirChooser.getSelectedFile()
+                            .getAbsolutePath();
+                    groundDirField.setText(selectedDir);
+                }
+            }
+        });
+        JPanel ground = new JPanel();
+        ground.add(groundDir);
+        ground.add(groundDirField);
+        ground.add(groundDirBrowse);
+
+        JLabel negativeDir = new JLabel("无威胁类样本路径：");
         negativeDirField = new JTextField();
         negativeDirField.setColumns(10);
         negativeDirBrowse = new JButton("浏览");
@@ -227,15 +191,36 @@ public class Train extends JFrame {
         samplePanel = new JPanel();
         samplePanel.setBorder(BorderFactory.createTitledBorder("样本路径"));
         samplePanel.setLayout(new BoxLayout(samplePanel, BoxLayout.Y_AXIS));
-        samplePanel.add(positive);
+        samplePanel.add(tower);
+        samplePanel.add(ground);
         samplePanel.add(negative);
+
+        // 增量学习部分
+        increase = new JCheckBox("增量学习");
+        increase.setSelected(false);
+        increase.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent arg0) {
+                if (increase.isSelected()){
+                    increaseTrain = true;
+                } else{
+                    increaseTrain = false;
+                }
+                System.out.println(increaseTrain);
+            }
+        });
+        increase.setAlignmentX(LEFT_ALIGNMENT);
+        increasePanel = new JPanel();
+        increasePanel.setLayout(new BoxLayout(increasePanel, BoxLayout.X_AXIS));
+        increasePanel.setBorder(BorderFactory.createTitledBorder("增量学习"));
+        increasePanel.add(increase);
 
         // 整个中部
         center = new JPanel();
         center.setLayout(new GridLayout(3, 1));
         center.add(detection);
-        center.add(classPanel);
         center.add(samplePanel);
+        center.add(increasePanel);
 
         // 动作按钮
         getReady = new JButton("准备训练");
@@ -356,7 +341,7 @@ public class Train extends JFrame {
                     JOptionPane.ERROR_MESSAGE);
             return;
         }
-        String pos = positiveDirField.getText();
+        String pos = towerDirField.getText();
         String neg = negativeDirField.getText();
         if (pos == null || neg == null || pos.trim().length() == 0
                 || neg.trim().length() == 0) {
@@ -378,7 +363,7 @@ public class Train extends JFrame {
                     JOptionPane.ERROR_MESSAGE);
             return;
         }
-        tHelper.featureExtract(progressBar);
+        tHelper.featureExtract(progressBar, increaseTrain);
         if (validateStatus(TrainHelper.FEATURES_EXTRACTED) == 0) {
             JOptionPane.showMessageDialog(null, "特征提取完成！", "成功",
                     JOptionPane.INFORMATION_MESSAGE);
