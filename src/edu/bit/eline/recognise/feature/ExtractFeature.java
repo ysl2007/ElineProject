@@ -22,11 +22,11 @@ import net.semanticmetadata.lire.imageanalysis.ScalableColor;
 import net.semanticmetadata.lire.imageanalysis.Tamura;
 
 public class ExtractFeature implements Runnable {
-    private String  posPath;
-    private String  negPath;
-    private String  featurefilepath;
-    private String  pos;
-    private boolean status = false;
+    private String       posPath;
+    private String       negPath;
+    private String       featurefilepath;
+    private String       pos;
+    private boolean      goOn = true;
     private JProgressBar proBar;
 
     public ExtractFeature() {
@@ -251,17 +251,23 @@ public class ExtractFeature implements Runnable {
     }
 
     public void extractFoldfeature() {
+        proBar.setValue(0);
         String posClass = Character.toString(pos.charAt(0));
         BufferedWriter outFile = null;
         try {
             outFile = new BufferedWriter(new FileWriter(featurefilepath));
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
+        }
+        try {
             String[] posImageList = getImgFilelist(posPath);
             String[] negImageList = getImgFilelist(negPath);
             int imgNums = posImageList.length + negImageList.length;
             int curImg = 0;
             proBar.setMaximum(imgNums);
             if (posImageList.length > 0) {
-                for (int j = 0; j < posImageList.length; j++) {
+                for (int j = 0; j < posImageList.length && goOn; j++) {
                     String features = extractIMGfeature(posImageList[j]);
                     String featurestr = posClass + " " + features;
                     outFile.write(featurestr + "\n");
@@ -271,15 +277,16 @@ public class ExtractFeature implements Runnable {
                 }
             }
             if (negImageList.length > 0) {
-                for (int j = 0; j < negImageList.length; j++) {
+                for (int j = 0; j < negImageList.length && goOn; j++) {
                     String features = extractIMGfeature(negImageList[j]);
                     String featurestr = "0 " + features;
                     outFile.write(featurestr + "\n");
                     System.out.println(featurestr);
+                    curImg += 1;
+                    proBar.setValue(curImg);
                 }
             }
             outFile.close();
-            status = true;
         } catch (Exception e) {
             try {
                 outFile.close();
@@ -287,7 +294,6 @@ public class ExtractFeature implements Runnable {
                 e1.printStackTrace();
             }
             e.printStackTrace();
-            status = false;
         }
     }
 
@@ -296,7 +302,7 @@ public class ExtractFeature implements Runnable {
         extractFoldfeature();
     }
 
-    public boolean getStatus() {
-        return status;
+    public void setRunFlag(boolean status) {
+        goOn = status;
     }
 }

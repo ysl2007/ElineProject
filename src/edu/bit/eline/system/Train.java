@@ -378,13 +378,7 @@ public class Train extends JFrame {
                     JOptionPane.ERROR_MESSAGE);
             return;
         }
-
-        boolean status = tHelper.featureExtract(progressBar);
-        if (!status) {
-            JOptionPane.showMessageDialog(null, "特征提取出现错误。", "错误",
-                    JOptionPane.ERROR_MESSAGE);
-            return;
-        }
+        tHelper.featureExtract(progressBar);
         if (validateStatus(TrainHelper.FEATURES_EXTRACTED) == 0) {
             JOptionPane.showMessageDialog(null, "特征提取完成！", "成功",
                     JOptionPane.INFORMATION_MESSAGE);
@@ -468,9 +462,12 @@ public class Train extends JFrame {
                     JOptionPane.YES_NO_OPTION);
             if (status == JOptionPane.YES_OPTION) {
                 Utils.delete(new File(rootPath + "/models/" + name.getText()));
+                tHelper.stopThread();
+                Train.this.dispose();
             }
+        } else {
+            Train.this.dispose();
         }
-        Train.this.dispose();
     }
 
     private int validateStatus(int status) {

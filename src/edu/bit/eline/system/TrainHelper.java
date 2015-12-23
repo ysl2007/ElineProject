@@ -109,23 +109,14 @@ public class TrainHelper {
         status = 1;
     }
 
-    public boolean featureExtract(JProgressBar proBar) {
-        ef = new ExtractFeature(posPath, negPath, featurepath, classes[1], proBar);
-        Thread thread = new Thread(ef);
-        thread.start();
-        while (thread.isAlive()) {
-            try {
-                Thread.sleep(5000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-        if (ef.getStatus()) {
-            status = 2;
-            return true;
-        } else {
-            return false;
-        }
+    public void featureExtract(JProgressBar proBar) {
+        ef = new ExtractFeature(posPath, negPath, featurepath, classes[1],
+                proBar);
+        new Thread(ef).start();
+    }
+
+    public void stopThread() {
+        ef.setRunFlag(false);
     }
 
     public void featureNorm() {
