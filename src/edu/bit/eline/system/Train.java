@@ -4,6 +4,8 @@ import java.awt.BorderLayout;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -114,6 +116,7 @@ public class Train extends JFrame {
         detParams.add(minArea);
 
         detection = new JPanel();
+        detection.setPreferredSize(new Dimension(320, 140));
         detection.setBorder(BorderFactory.createTitledBorder("检测"));
         detection.setLayout(new BoxLayout(detection, BoxLayout.X_AXIS));
         detection.add(Box.createHorizontalStrut(5));
@@ -193,6 +196,7 @@ public class Train extends JFrame {
         samplePanel.add(tower);
         samplePanel.add(ground);
         samplePanel.add(negative);
+        samplePanel.setPreferredSize(new Dimension(320, 140));
 
         // 增量学习部分
         increase = new JCheckBox("增量学习");
@@ -209,16 +213,32 @@ public class Train extends JFrame {
         });
         increase.setAlignmentX(LEFT_ALIGNMENT);
         increasePanel = new JPanel();
+        increasePanel.setPreferredSize(new Dimension(320, 70));
         increasePanel.setLayout(new BoxLayout(increasePanel, BoxLayout.X_AXIS));
         increasePanel.setBorder(BorderFactory.createTitledBorder("增量学习"));
         increasePanel.add(increase);
 
         // 整个中部
         center = new JPanel();
-        center.setLayout(new GridLayout(3, 1));
-        center.add(detection);
-        center.add(samplePanel);
-        center.add(increasePanel);
+        center.setLayout(new GridBagLayout());
+        GridBagConstraints detCons = new GridBagConstraints();
+        detCons.gridx = 0;
+        detCons.gridy = 0;
+        detCons.gridwidth = 1;
+        detCons.gridheight = 2;
+        center.add(detection, detCons);
+        GridBagConstraints smpCons = new GridBagConstraints();
+        smpCons.gridx = 0;
+        smpCons.gridy = 2;
+        smpCons.gridwidth = 1;
+        smpCons.gridheight = 2;
+        center.add(samplePanel, smpCons);
+        GridBagConstraints incCons = new GridBagConstraints();
+        incCons.gridx = 0;
+        incCons.gridy = 4;
+        incCons.gridwidth = 1;
+        incCons.gridheight = 1;
+        center.add(increasePanel, incCons);
 
         // 动作按钮
         getReady = new JButton("准备训练");
@@ -288,7 +308,7 @@ public class Train extends JFrame {
         actionPanel = new JPanel();
         actionPanel.setBorder(BorderFactory.createTitledBorder("动作"));
         actionPanel.setLayout(new BoxLayout(actionPanel, BoxLayout.Y_AXIS));
-        actionPanel.add(Box.createVerticalStrut(20));
+        actionPanel.add(Box.createVerticalStrut(10));
         actionPanel.add(getReady);
         actionPanel.add(Box.createVerticalStrut(20));
         actionPanel.add(featExtract);
@@ -307,7 +327,7 @@ public class Train extends JFrame {
         progressBar = new JProgressBar();
         progressBar.setStringPainted(true);
         progressBar.setValue(0);
-        progressBar.setPreferredSize(new Dimension(400, 20));
+        progressBar.setPreferredSize(new Dimension(430, 20));
 
         buttonPanel = new JPanel();
         buttonPanel.setLayout(new FlowLayout());
@@ -463,7 +483,7 @@ public class Train extends JFrame {
 
     private void finalSettings() {
         this.setContentPane(container);
-        setSize(450, 480);
+        setSize(450, 430);
         setTitle("模型训练");
         setVisible(true);
         setResizable(false);
