@@ -193,7 +193,6 @@ public class MainPanel extends JFrame {
                         .getModel().getRoot();
                 List<String> cameraList = getAllLeaf(tree);
                 mm = new ModelManager(cameraList);
-
             }
         });
 
@@ -305,7 +304,6 @@ public class MainPanel extends JFrame {
     }
 
     private DefaultTreeModel parseJsonTree(String jsonStr) throws JSONException {
-        // System.out.println(jsonStr);
         JSONArray topArr = new JSONArray(jsonStr);
         DefaultMutableTreeNode root = new DefaultMutableTreeNode("根节点");
         recursiveParse(topArr, root, null);
