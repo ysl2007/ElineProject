@@ -34,7 +34,6 @@ import org.json.JSONTokener;
 public class Train extends JFrame {
     private static final long serialVersionUID = 3541303824514014559L;
     private TrainHelper       tHelper;
-    private String            selectedClass;
     private String            configFile       = "./config.json";
     private String            rootPath;
     private boolean           increaseTrain    = false;
@@ -201,12 +200,11 @@ public class Train extends JFrame {
         increase.addItemListener(new ItemListener() {
             @Override
             public void itemStateChanged(ItemEvent arg0) {
-                if (increase.isSelected()){
+                if (increase.isSelected()) {
                     increaseTrain = true;
-                } else{
+                } else {
                     increaseTrain = false;
                 }
-                System.out.println(increaseTrain);
             }
         });
         increase.setAlignmentX(LEFT_ALIGNMENT);
@@ -282,7 +280,7 @@ public class Train extends JFrame {
         exit.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent arg0) {
-                disposeMe();
+                dispose();
             }
         });
 
@@ -336,20 +334,16 @@ public class Train extends JFrame {
             name.setEditable(true);
             return;
         }
-        if (selectedClass == null) {
-            JOptionPane.showMessageDialog(null, "没有选择异常类别。", "错误",
-                    JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-        String pos = towerDirField.getText();
-        String neg = negativeDirField.getText();
-        if (pos == null || neg == null || pos.trim().length() == 0
-                || neg.trim().length() == 0) {
+        String towerDir = towerDirField.getText();
+        String groundDir = groundDirField.getText();
+        String negDir = negativeDirField.getText();
+        if (towerDir.trim().length() == 0 || groundDir.trim().length() == 0
+                || negDir.trim().length() == 0) {
             JOptionPane.showMessageDialog(null, "没有选择样本路径。", "错误",
                     JOptionPane.ERROR_MESSAGE);
             return;
         }
-        tHelper = new TrainHelper(lineName, selectedClass, pos, neg);
+        tHelper = new TrainHelper(lineName, towerDir, groundDir, negDir);
         tHelper.getDirsReady();
         if (validateStatus(TrainHelper.DIRS_READY) == 0) {
             JOptionPane.showMessageDialog(null, "训练准备完成！", "成功",
@@ -440,19 +434,19 @@ public class Train extends JFrame {
         }
     }
 
-    private void disposeMe() {
+    @Override
+    public void dispose() {
         if (tHelper != null && validateStatus(TrainHelper.MODEL_TRAINED) != 0) {
             int status = JOptionPane.showConfirmDialog(null,
                     "训练尚未完成，如果关闭窗口，则会删除已有临时文件，是否继续？", "训练未完成",
                     JOptionPane.YES_NO_OPTION);
             if (status == JOptionPane.YES_OPTION) {
-                Utils.delete(new File(rootPath + "/models/" + name.getText()));
                 tHelper.stopThread();
-                Train.this.dispose();
+                Utils.delete(new File(rootPath + "/models/" + name.getText()));
             }
         } else {
-            Train.this.dispose();
         }
+        super.dispose();
     }
 
     private int validateStatus(int status) {
@@ -478,6 +472,6 @@ public class Train extends JFrame {
     }
 
     public static void main(String[] args) {
-        new Train("line");
+        new Train("摄像头1");
     }
 }

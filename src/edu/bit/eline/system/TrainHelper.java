@@ -27,10 +27,12 @@ public class TrainHelper {
     public static final int     MODEL_TRAINED      = 6;
 
     private final String        configFile         = "./config.json";
+    private String              lineName;
     private String              modelPath;
     private String              tempPath;
     private String              featPath;
-    private String              posPath;
+    private String              towerPath;
+    private String              groundPath;
     private String              negPath;
 
     private String              tempoptmodelpath;
@@ -46,10 +48,9 @@ public class TrainHelper {
     private ImageClassification ic;
     private double              c;
     private double              g;
-    private String[]            classes            = { "0.0", "0.0" };
-    private int                 status             = -1;
+    private int                 status             = NOT_INITIALIZED;
 
-    public TrainHelper(String lineName, String posClass, String posPath,
+    public TrainHelper(String lineName, String towerPath, String groundPath,
             String negPath) {
         JSONTokener tokener;
         try {
@@ -85,10 +86,11 @@ public class TrainHelper {
         finalmodelpath = modelPath + "final.model";
 
         ic = new ImageClassification();
-        classes[1] = posClass;
-        this.posPath = posPath;
+        this.lineName = lineName;
+        this.towerPath = towerPath;
+        this.groundPath = groundPath;
         this.negPath = negPath;
-        status = 0;
+        status = INITIALIZED;
     }
 
     public int getStatus() {
@@ -106,13 +108,13 @@ public class TrainHelper {
         dir = new File(featPath);
         if (!dir.exists())
             dir.mkdir();
-        status = 1;
+        status = DIRS_READY;
     }
 
     public void featureExtract(JProgressBar proBar, boolean incraseTrain) {
-        ef = new ExtractFeature(posPath, negPath, featurepath, classes[1],
-                proBar);
-        ef.setFolders(posPath, negPath, featurepath);
+        ef = new ExtractFeature(lineName, proBar, incraseTrain);
+        ef.setCallback(this);
+        ef.setFolders(towerPath, groundPath, negPath, featurepath);
         new Thread(ef).start();
     }
 
@@ -122,16 +124,17 @@ public class TrainHelper {
 
     public void featureNorm() {
         ic.scaledata(featurepath, scalefeaturepath, true, scaleparamspath);
-        status = 3;
+        status = FEATURES_NORMED;
     }
 
     public void generateTrainPredict() {
         ic.generateTrainPredict(scalefeaturepath, 50, trainfeaturepath,
                 predictfeaturepath);
-        status = 4;
+        status = DATA_GENERATED;
     }
 
     public void optiParams() {
+        String[] classes = { "1", "2" };
         String result = ic.paramoptimize(trainfeaturepath, tempoptmodelpath,
                 predictfeaturepath, tempoptresultpath, classes);
         int idx1 = result.indexOf(':') + 2;
@@ -140,7 +143,7 @@ public class TrainHelper {
         idx1 = result.indexOf(':', idx2) + 2;
         idx2 = result.indexOf(' ', idx1);
         g = Double.valueOf(result.substring(idx1, idx2));
-        status = 5;
+        status = PARAMS_OPTIMIZED;
     }
 
     public void train(String recogParam) throws IOException {
@@ -149,6 +152,15 @@ public class TrainHelper {
         FileWriter writer = new FileWriter(new File(modelPath + "recog.params"));
         writer.write(recogParam);
         writer.close();
-        status = 6;
+        status = MODEL_TRAINED;
+    }
+
+    public void setStatus(int status, JProgressBar proBar) {
+        if (proBar.getValue() != proBar.getMaximum()) {
+            JOptionPane.showMessageDialog(null, "特征提取过程已完成，可能略过了部分图片。", "完成",
+                    JOptionPane.INFORMATION_MESSAGE);
+        }
+        this.status = status;
+        proBar.setValue(0);
     }
 }

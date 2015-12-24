@@ -6,6 +6,9 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,37 +22,44 @@ import net.semanticmetadata.lire.imageanalysis.EdgeHistogram;
 import net.semanticmetadata.lire.imageanalysis.FCTH;
 import net.semanticmetadata.lire.imageanalysis.ScalableColor;
 import net.semanticmetadata.lire.imageanalysis.Tamura;
+import edu.bit.eline.system.TrainHelper;
+import edu.bit.eline.system.run.SQLConnection;
 
 public class ExtractFeature implements Runnable {
-    private String       towerPath;
-    private String       groundPath;
-    private String       negPath;
+    private String[]     classPath;
     private String       featurefilepath;
-//    private String       pos;
+    private String       lineName;
     private boolean      goOn         = true;
     private boolean      increase     = false;
     private boolean      folderStatus = false;
+    private TrainHelper  th;
     private JProgressBar proBar;
 
     public ExtractFeature() {
     }
 
-    public ExtractFeature(JProgressBar proBar, boolean increase) {
+    public ExtractFeature(String lineName, JProgressBar proBar, boolean increase) {
         this.proBar = proBar;
         this.increase = increase;
+        this.lineName = lineName;
     }
 
     public void setFolders(String towerPath, String groundPath, String negPath,
             String feature) {
-        this.towerPath = towerPath;
-        this.groundPath = groundPath;
-        this.negPath = negPath;
+        classPath = new String[3];
+        classPath[0] = negPath;
+        classPath[1] = towerPath;
+        classPath[2] = groundPath;
         this.featurefilepath = feature;
         folderStatus = true;
     }
 
     public void setRunFlag(boolean status) {
         goOn = status;
+    }
+
+    public void setCallback(TrainHelper th) {
+        this.th = th;
     }
 
     // 提取一个图像的特征
@@ -134,12 +144,28 @@ public class ExtractFeature implements Runnable {
 
     @Override
     public void run() {
-        extractFoldfeature();
+        if (!folderStatus || th == null) {
+            return;
+        }
+        BufferedWriter outFile = null;
+        try {
+            outFile = new BufferedWriter(new FileWriter(featurefilepath));
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
+        }
+        extractFoldfeature(outFile);
         if (increase) {
-            extractDBFeature();
+            extractDBFeature(outFile);
         } else {
             proBar.setValue(proBar.getMaximum());
         }
+        try {
+            outFile.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        th.setStatus(TrainHelper.FEATURES_EXTRACTED, proBar);
     }
 
     private String[] getImgFilelist(String foldpath) {
@@ -165,50 +191,36 @@ public class ExtractFeature implements Runnable {
             return null;
     }
 
-    private void extractFoldfeature() {
+    private void extractFoldfeature(BufferedWriter outFile) {
         proBar.setValue(0);
-        String posClass = Character.toString(pos.charAt(0));
-        BufferedWriter outFile = null;
-        try {
-            outFile = new BufferedWriter(new FileWriter(featurefilepath));
-        } catch (IOException e) {
-            e.printStackTrace();
-            return;
+        proBar.setMaximum(100);
+
+        int total = 0;
+        for (String dir : classPath) {
+            String[] imgList = getImgFilelist(dir);
+            total += imgList.length;
         }
-        try {
-            String[] posImageList = getImgFilelist(posPath);
-            String[] negImageList = getImgFilelist(negPath);
-            int imgNums = posImageList.length + negImageList.length;
-            int curImg = 0;
-            proBar.setMaximum(imgNums + 10);
-            if (posImageList.length > 0) {
-                for (int j = 0; j < posImageList.length && goOn; j++) {
-                    String features = extractIMGfeature(posImageList[j]);
-                    String featurestr = posClass + " " + features;
-                    outFile.write(featurestr + "\n");
-                    System.out.println(featurestr);
-                    curImg += 1;
-                    proBar.setValue(curImg);
-                }
-            }
-            if (negImageList.length > 0) {
-                for (int j = 0; j < negImageList.length && goOn; j++) {
-                    String features = extractIMGfeature(negImageList[j]);
-                    String featurestr = "0 " + features;
-                    outFile.write(featurestr + "\n");
-                    System.out.println(featurestr);
-                    curImg += 1;
-                    proBar.setValue(curImg);
-                }
-            }
-            outFile.close();
-        } catch (Exception e) {
+        int curNum = 0;
+        for (int i = 0; i < classPath.length; ++i) {
+            String classTag = Integer.toString(i);
             try {
-                outFile.close();
-            } catch (IOException e1) {
-                e1.printStackTrace();
+                String[] imageList = getImgFilelist(classPath[i]);
+                if (imageList.length > 0) {
+                    for (int j = 0; j < imageList.length; j++) {
+                        if (!goOn){
+                            return;
+                        }
+                        String features = extractIMGfeature(imageList[j]);
+                        String featurestr = classTag + " " + features;
+                        outFile.write(featurestr + "\n");
+                        System.out.println(featurestr);
+                        curNum += 1;
+                        proBar.setValue((int)((float)curNum / total * 80));
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-            e.printStackTrace();
         }
     }
 
@@ -236,9 +248,61 @@ public class ExtractFeature implements Runnable {
         return addnum(featurestr);
     }
 
-    private void extractDBFeature() {
-        sdfasd
-        proBar.setValue(proBar.getMaximum());
+    private void extractDBFeature(BufferedWriter outFile) {
+        System.out.println("DB feature...");
+        SQLConnection dbConn = new SQLConnection();
+        if (dbConn.isClosed()) {
+            return;
+        }
+        String sql = "SELECT FileContent, Params, RiskType FROM Table_AbnormalImg WHERE CameraName = '"
+                + lineName + "'";
+        ResultSet results;
+        try {
+            results = dbConn.select(sql);
+            while (results.next()) {
+                InputStream is = results.getBinaryStream("FileContent");
+                String riskType = results.getString("RiskType");
+                String paramStr = results.getString("Params");
+                if (is == null || riskType == null || paramStr == null){
+                    continue;
+                }
+                BufferedImage bimg = ImageIO.read(is);
+                String[] params = paramStr.split(";");
+                for (String oneParam : params) {
+                    if (!goOn){
+                        return;
+                    }
+                    String[] axisVals = oneParam.split(" ");
+                    BufferedImage cropped;
+                    try {
+                        float x = Float.parseFloat(axisVals[0]);
+                        float y = Float.parseFloat(axisVals[1]);
+                        float w = Float.parseFloat(axisVals[2]);
+                        float h = Float.parseFloat(axisVals[3]);
+                        cropped = bimg.getSubimage((int) x, (int) y, (int) w,
+                                (int) h);
+                    } catch (RuntimeException e) {
+                        e.printStackTrace();
+                        continue;
+                    }
+                    String feature = extractIMGfeature(cropped);
+                    if (riskType.equals("杆塔设备")) {
+                        feature = "1 " + feature;
+                    } else if (riskType.equals("地面设备")) {
+                        feature = "2 " + feature;
+                    }
+                    System.out.println(feature);
+                    outFile.write(feature + "\n");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
+        }
+        proBar.setValue(proBar.getValue() + 20);
     }
 
     private String addnum(String str) {

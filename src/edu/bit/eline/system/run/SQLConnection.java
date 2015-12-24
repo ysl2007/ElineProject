@@ -6,7 +6,9 @@ import java.io.FileReader;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 import javax.swing.JOptionPane;
 
@@ -81,6 +83,12 @@ public class SQLConnection {
             e.printStackTrace();
             return false;
         }
+    }
+    
+    public ResultSet select(String sql) throws SQLException{
+        Statement stmt = dbConn.createStatement();
+        ResultSet result = stmt.executeQuery(sql);
+        return result;
     }
 
     private void test() throws SQLException {
