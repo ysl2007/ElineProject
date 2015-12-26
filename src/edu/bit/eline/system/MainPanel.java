@@ -72,22 +72,21 @@ public class MainPanel extends JFrame {
     private JButton           stopAll;
     private JScrollPane       treeController;
 
-    ModelManager              mm;
-
     class TreeCellRenderer extends DefaultTreeCellRenderer {
         private static final long serialVersionUID = -8890987966973311991L;
 
         @Override
-        public Component getTreeCellRendererComponent(JTree tree, Object value,
-                boolean sel, boolean expanded, boolean leaf, int row,
-                boolean hasFocus) {
-            super.getTreeCellRendererComponent(tree, value, sel, expanded,
-                    leaf, row, hasFocus);
+        public Component getTreeCellRendererComponent(JTree tree, Object value, boolean sel, boolean expanded,
+                boolean leaf, int row, boolean hasFocus) {
+            super.getTreeCellRendererComponent(tree, value, sel, expanded, leaf, row, hasFocus);
             DefaultMutableTreeNode node = (DefaultMutableTreeNode) value;
             String lineName = (String) node.getUserObject();
             File modelFile = new File(configPath + "models/" + lineName);
             if (modelFile.exists()) {
                 setForeground(Color.RED);
+            }
+            if (processer.isRunning(lineName)) {
+                setForeground(Color.GREEN);
             }
             return this;
         }
@@ -100,10 +99,11 @@ public class MainPanel extends JFrame {
         configPath = jo.getString("config_root_path");
         configPath += "/";
 
-        setupGUI();
         storage = new ImageStorage();
         processer = new Processer(storage);
         imgProvider = new ImageProvider(storage, processer);
+
+        setupGUI();
 
         new Thread(imgProvider).start();
         new Thread(processer).start();
@@ -119,8 +119,7 @@ public class MainPanel extends JFrame {
                 if (getCameraTreeFromWeb()) {
                     System.out.println("Device tree obtained.");
                 } else {
-                    JOptionPane.showMessageDialog(null, "获取设备树失败。", "发生错误",
-                            JOptionPane.WARNING_MESSAGE);
+                    JOptionPane.showMessageDialog(null, "获取设备树失败。", "发生错误", JOptionPane.WARNING_MESSAGE);
                 }
             }
         });
@@ -146,8 +145,7 @@ public class MainPanel extends JFrame {
         runAll.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                List<String> allLeaves = getAllLeaf((DefaultMutableTreeNode) treePanel
-                        .getModel().getRoot());
+                List<String> allLeaves = getAllLeaf((DefaultMutableTreeNode) treePanel.getModel().getRoot());
                 for (String lineName : allLeaves) {
                     Params p = initRunner(lineName, true);
                     if (p != null) {
@@ -189,10 +187,9 @@ public class MainPanel extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 // TreeModel tree = treePanel.getModel();
-                DefaultMutableTreeNode tree = (DefaultMutableTreeNode) treePanel
-                        .getModel().getRoot();
+                DefaultMutableTreeNode tree = (DefaultMutableTreeNode) treePanel.getModel().getRoot();
                 List<String> cameraList = getAllLeaf(tree);
-                mm = new ModelManager(cameraList);
+                new ModelManager(cameraList);
             }
         });
 
@@ -242,8 +239,7 @@ public class MainPanel extends JFrame {
         treePanel.addTreeSelectionListener(new TreeSelectionListener() {
             @Override
             public void valueChanged(TreeSelectionEvent e) {
-                DefaultMutableTreeNode tnode = (DefaultMutableTreeNode) treePanel
-                        .getLastSelectedPathComponent();
+                DefaultMutableTreeNode tnode = (DefaultMutableTreeNode) treePanel.getLastSelectedPathComponent();
                 if (tnode.isLeaf()) {
                     curSelect = (String) tnode.getUserObject();
                     if (isRunning(curSelect)) {
@@ -292,8 +288,8 @@ public class MainPanel extends JFrame {
     }
 
     private boolean getCameraTreeFromFile() {
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(
-                new FileInputStream("./deviceTree.json"), "utf-8"))) {
+        try (BufferedReader br = new BufferedReader(
+                new InputStreamReader(new FileInputStream("./deviceTree.json"), "utf-8"))) {
             String jsonTree = br.readLine();
             DefaultTreeModel dt = parseJsonTree(jsonTree);
             treePanel.setModel(dt);
@@ -310,8 +306,7 @@ public class MainPanel extends JFrame {
         return new DefaultTreeModel(root);
     }
 
-    private void recursiveParse(JSONArray arr, DefaultMutableTreeNode father,
-            String fatName) throws JSONException {
+    private void recursiveParse(JSONArray arr, DefaultMutableTreeNode father, String fatName) throws JSONException {
         for (int i = 0; i < arr.length(); ++i) {
             JSONObject obj = arr.getJSONObject(i);
             String name = obj.getString("text");
@@ -336,8 +331,7 @@ public class MainPanel extends JFrame {
         String modelPath = configPath + "/models/" + lineName;
         if (!(new File(modelPath).exists())) {
             if (!quiet) {
-                JOptionPane.showMessageDialog(null, "模型文件不存在。", "遇到问题",
-                        JOptionPane.PLAIN_MESSAGE);
+                JOptionPane.showMessageDialog(null, "模型文件不存在。", "遇到问题", JOptionPane.PLAIN_MESSAGE);
             }
             return null;
         }
@@ -347,15 +341,13 @@ public class MainPanel extends JFrame {
             param = new Params(lineName);
         } catch (IOException e) {
             if (!quiet) {
-                JOptionPane.showMessageDialog(null, "模型文件读取错误，请检查文件是否存在或是否损坏。",
-                        "遇到问题", JOptionPane.PLAIN_MESSAGE);
+                JOptionPane.showMessageDialog(null, "模型文件读取错误，请检查文件是否存在或是否损坏。", "遇到问题", JOptionPane.PLAIN_MESSAGE);
             }
             return null;
         }
         if (param.checkParams() == false) {
             if (!quiet) {
-                JOptionPane.showMessageDialog(null, "模型文件不完整，可能需要重新训练。",
-                        "遇到问题", JOptionPane.PLAIN_MESSAGE);
+                JOptionPane.showMessageDialog(null, "模型文件不完整，可能需要重新训练。", "遇到问题", JOptionPane.PLAIN_MESSAGE);
             }
             return null;
         }
@@ -410,8 +402,7 @@ public class MainPanel extends JFrame {
         try {
             new MainPanel();
         } catch (FileNotFoundException e) {
-            JOptionPane.showMessageDialog(null, "找不到配置文件。", "错误",
-                    JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(null, "找不到配置文件。", "错误", JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
             return;
         }

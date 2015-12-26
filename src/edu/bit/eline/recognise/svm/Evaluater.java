@@ -17,7 +17,6 @@ public class Evaluater {
             classtrueindexs[i] = findlabelindexs(truelabels, classes[i]);
             classpredictindexs[i] = findlabelindexs(predictlabels, classes[i]);
         }
-
     }
 
     public int[] findlabelindexs(String[] labels, String label) {
@@ -108,6 +107,23 @@ public class Evaluater {
         return (float) rightnum / truelabels.length;
     }
 
+    public float getRecall() {
+        int positiveTrue = 0;
+        int positiveAll = 0;
+        for (int i = 0; i < truelabels.length; ++i) {
+            if (truelabels[i].equals("0.0") == false) {
+                ++positiveAll;
+                if (predictlabels[i].equals("0.0")) {
+                    ++positiveTrue;
+                }
+            }
+        }
+        if (positiveAll == 0) {
+            return 0;
+        }
+        return (float) positiveTrue / positiveAll;
+    }
+
     public float[] getRecalls() {
         float[] recalls = new float[classes.length];
         for (int i = 0; i < classes.length; i++) {
@@ -122,12 +138,6 @@ public class Evaluater {
                 recalls[i] = 0;
         }
         return recalls;
-
-    }
-
-    public static void main(String[] args) {
-        // TODO Auto-generated method stub
-
     }
 
 }

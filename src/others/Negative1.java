@@ -162,6 +162,5 @@ public class Negative1 {
     public static void main(String[] args) {
         String path = "E:\\train\\";
         String dest = "E:\\negative3\\";
-
     }
 }

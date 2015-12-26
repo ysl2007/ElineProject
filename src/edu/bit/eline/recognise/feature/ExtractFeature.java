@@ -1,12 +1,13 @@
 package edu.bit.eline.recognise.feature;
 
 import java.awt.image.BufferedImage;
+import java.io.BufferedInputStream;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.io.InputStream;
+import java.sql.Blob;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -15,6 +16,8 @@ import java.util.List;
 import javax.imageio.ImageIO;
 import javax.swing.JProgressBar;
 
+import edu.bit.eline.system.TrainHelper;
+import edu.bit.eline.system.run.SQLConnection;
 import net.semanticmetadata.lire.imageanalysis.AutoColorCorrelogram;
 import net.semanticmetadata.lire.imageanalysis.CEDD;
 import net.semanticmetadata.lire.imageanalysis.ColorLayout;
@@ -22,14 +25,12 @@ import net.semanticmetadata.lire.imageanalysis.EdgeHistogram;
 import net.semanticmetadata.lire.imageanalysis.FCTH;
 import net.semanticmetadata.lire.imageanalysis.ScalableColor;
 import net.semanticmetadata.lire.imageanalysis.Tamura;
-import edu.bit.eline.system.TrainHelper;
-import edu.bit.eline.system.run.SQLConnection;
 
 public class ExtractFeature implements Runnable {
     private String[]     classPath;
     private String       featurefilepath;
     private String       lineName;
-    private boolean      goOn         = true;
+    private boolean      runFlag      = true;
     private boolean      increase     = false;
     private boolean      folderStatus = false;
     private TrainHelper  th;
@@ -44,8 +45,7 @@ public class ExtractFeature implements Runnable {
         this.lineName = lineName;
     }
 
-    public void setFolders(String towerPath, String groundPath, String negPath,
-            String feature) {
+    public void setFolders(String towerPath, String groundPath, String negPath, String feature) {
         classPath = new String[3];
         classPath[0] = negPath;
         classPath[1] = towerPath;
@@ -55,7 +55,7 @@ public class ExtractFeature implements Runnable {
     }
 
     public void setRunFlag(boolean status) {
-        goOn = status;
+        runFlag = status;
     }
 
     public void setCallback(TrainHelper th) {
@@ -74,26 +74,19 @@ public class ExtractFeature implements Runnable {
         String features = "";
         try {
             ac.extract(subimg);
-            features = features + "AutoColorCorrelogram: "
-                    + ac.getStringRepresentation() + ";@";
+            features = features + "AutoColorCorrelogram: " + ac.getStringRepresentation() + ";@";
             cd.extract(subimg);
-            features = features + "CEDD: " + cd.getStringRepresentation()
-                    + ";@";
+            features = features + "CEDD: " + cd.getStringRepresentation() + ";@";
             cl.extract(subimg);
-            features = features + "ColorLayout: "
-                    + cl.getStringRepresentation() + ";@";
+            features = features + "ColorLayout: " + cl.getStringRepresentation() + ";@";
             ed.extract(subimg);
-            features = features + "EdgeHistogram: "
-                    + ed.getStringRepresentation() + ";@";
+            features = features + "EdgeHistogram: " + ed.getStringRepresentation() + ";@";
             sc.extract(subimg);
-            features = features + "ScalableColor: "
-                    + sc.getStringRepresentation() + ";@";
+            features = features + "ScalableColor: " + sc.getStringRepresentation() + ";@";
             ft.extract(subimg);
-            features = features + "FCTH: " + ft.getStringRepresentation()
-                    + ";@";
+            features = features + "FCTH: " + ft.getStringRepresentation() + ";@";
             tm.extract(subimg);
-            features = features + "Tamura: " + tm.getStringRepresentation()
-                    + ";@";
+            features = features + "Tamura: " + tm.getStringRepresentation() + ";@";
             return formatfeatures(features);
         } catch (Exception e) {
             e.printStackTrace();
@@ -115,26 +108,19 @@ public class ExtractFeature implements Runnable {
             File imgfile = new File(filepath);
             BufferedImage subimg = ImageIO.read(imgfile);
             ac.extract(subimg);
-            features = features + "AutoColorCorrelogram: "
-                    + ac.getStringRepresentation() + ";@";
+            features = features + "AutoColorCorrelogram: " + ac.getStringRepresentation() + ";@";
             cd.extract(subimg);
-            features = features + "CEDD: " + cd.getStringRepresentation()
-                    + ";@";
+            features = features + "CEDD: " + cd.getStringRepresentation() + ";@";
             cl.extract(subimg);
-            features = features + "ColorLayout: "
-                    + cl.getStringRepresentation() + ";@";
+            features = features + "ColorLayout: " + cl.getStringRepresentation() + ";@";
             ed.extract(subimg);
-            features = features + "EdgeHistogram: "
-                    + ed.getStringRepresentation() + ";@";
+            features = features + "EdgeHistogram: " + ed.getStringRepresentation() + ";@";
             sc.extract(subimg);
-            features = features + "ScalableColor: "
-                    + sc.getStringRepresentation() + ";@";
+            features = features + "ScalableColor: " + sc.getStringRepresentation() + ";@";
             ft.extract(subimg);
-            features = features + "FCTH: " + ft.getStringRepresentation()
-                    + ";@";
+            features = features + "FCTH: " + ft.getStringRepresentation() + ";@";
             tm.extract(subimg);
-            features = features + "Tamura: " + tm.getStringRepresentation()
-                    + ";@";
+            features = features + "Tamura: " + tm.getStringRepresentation() + ";@";
             return formatfeatures(features);
         } catch (Exception e) {
             e.printStackTrace();
@@ -165,7 +151,7 @@ public class ExtractFeature implements Runnable {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        th.setStatus(TrainHelper.FEATURES_EXTRACTED, proBar);
+        th.featExtrCallback(TrainHelper.FEATURES_EXTRACTED, proBar);
     }
 
     private String[] getImgFilelist(String foldpath) {
@@ -173,8 +159,7 @@ public class ExtractFeature implements Runnable {
         File dir = new File(foldpath);
         File[] imgs = dir.listFiles(new FilenameFilter() {
             public boolean accept(File dir, String name) {
-                return name.toLowerCase().endsWith("bmp")
-                        || name.toLowerCase().endsWith("jpg");
+                return name.toLowerCase().endsWith("bmp") || name.toLowerCase().endsWith("jpg");
             }
         });
         if (imgs.length > 0) {
@@ -207,7 +192,7 @@ public class ExtractFeature implements Runnable {
                 String[] imageList = getImgFilelist(classPath[i]);
                 if (imageList.length > 0) {
                     for (int j = 0; j < imageList.length; j++) {
-                        if (!goOn){
+                        if (!runFlag) {
                             return;
                         }
                         String features = extractIMGfeature(imageList[j]);
@@ -215,7 +200,11 @@ public class ExtractFeature implements Runnable {
                         outFile.write(featurestr + "\n");
                         System.out.println(featurestr);
                         curNum += 1;
-                        proBar.setValue((int)((float)curNum / total * 80));
+                        if (increase) {
+                            proBar.setValue((int) ((float) curNum / total * 80));
+                        } else {
+                            proBar.setValue((int) ((float) curNum / total * 90));
+                        }
                     }
                 }
             } catch (Exception e) {
@@ -227,23 +216,17 @@ public class ExtractFeature implements Runnable {
     private String formatfeatures(String sourcefeature) {
         String[] strarrs = sourcefeature.split("@");
         String featurestr = "";
-        featurestr += strarrs[1].substring(strarrs[1].indexOf(" ", 7),
-                strarrs[1].length() - 1).trim();
+        featurestr += strarrs[1].substring(strarrs[1].indexOf(" ", 7), strarrs[1].length() - 1).trim();
         featurestr += " ";
-        featurestr += strarrs[2].substring(strarrs[2].indexOf(" ", 0),
-                strarrs[2].length() - 1).trim();
+        featurestr += strarrs[2].substring(strarrs[2].indexOf(" ", 0), strarrs[2].length() - 1).trim();
         featurestr += " ";
-        featurestr += strarrs[3].substring(strarrs[3].indexOf(";", 20) + 1,
-                strarrs[3].length() - 1).trim();
+        featurestr += strarrs[3].substring(strarrs[3].indexOf(";", 20) + 1, strarrs[3].length() - 1).trim();
         featurestr += " ";
-        featurestr += strarrs[4].substring(strarrs[4].indexOf(";", 31) + 1,
-                strarrs[4].length() - 1).trim();
+        featurestr += strarrs[4].substring(strarrs[4].indexOf(";", 31) + 1, strarrs[4].length() - 1).trim();
         featurestr += " ";
-        featurestr += strarrs[5].substring(strarrs[5].indexOf(" ", 7) + 1,
-                strarrs[5].length() - 1).trim();
+        featurestr += strarrs[5].substring(strarrs[5].indexOf(" ", 7) + 1, strarrs[5].length() - 1).trim();
         featurestr += " ";
-        featurestr += strarrs[6].substring(strarrs[6].indexOf(" ", 10) + 1,
-                strarrs[6].length() - 1).trim();
+        featurestr += strarrs[6].substring(strarrs[6].indexOf(" ", 10) + 1, strarrs[6].length() - 1).trim();
 
         return addnum(featurestr);
     }
@@ -254,22 +237,26 @@ public class ExtractFeature implements Runnable {
         if (dbConn.isClosed()) {
             return;
         }
-        String sql = "SELECT FileContent, Params, RiskType FROM Table_AbnormalImg WHERE CameraName = '"
-                + lineName + "'";
+        String sql = "SELECT FileContent, Params, RiskType FROM Table_AbnormalImg WHERE CameraName = '" + lineName
+                + "'";
         ResultSet results;
         try {
             results = dbConn.select(sql);
             while (results.next()) {
-                InputStream is = results.getBinaryStream("FileContent");
+                Blob blob = results.getBlob("FileContent");
+                BufferedInputStream bis = new BufferedInputStream(blob.getBinaryStream());
                 String riskType = results.getString("RiskType");
                 String paramStr = results.getString("Params");
-                if (is == null || riskType == null || paramStr == null){
+                if (bis == null || riskType == null || paramStr == null) {
                     continue;
                 }
-                BufferedImage bimg = ImageIO.read(is);
+                BufferedImage bimg = ImageIO.read(bis);
+                if (bimg == null) {
+                    continue;
+                }
                 String[] params = paramStr.split(";");
                 for (String oneParam : params) {
-                    if (!goOn){
+                    if (!runFlag) {
                         return;
                     }
                     String[] axisVals = oneParam.split(" ");
@@ -279,17 +266,21 @@ public class ExtractFeature implements Runnable {
                         float y = Float.parseFloat(axisVals[1]);
                         float w = Float.parseFloat(axisVals[2]);
                         float h = Float.parseFloat(axisVals[3]);
-                        cropped = bimg.getSubimage((int) x, (int) y, (int) w,
-                                (int) h);
+                        cropped = bimg.getSubimage((int) x, (int) y, (int) w, (int) h);
                     } catch (RuntimeException e) {
                         e.printStackTrace();
                         continue;
                     }
                     String feature = extractIMGfeature(cropped);
-                    if (riskType.equals("杆塔设备")) {
-                        feature = "1 " + feature;
-                    } else if (riskType.equals("地面设备")) {
-                        feature = "2 " + feature;
+                    switch (riskType) {
+                        case "杆塔设备":
+                            feature = "1 " + feature;
+                            break;
+                        case "地面设备":
+                            feature = "2 " + feature;
+                            break;
+                        default:
+                            continue;
                     }
                     System.out.println(feature);
                     outFile.write(feature + "\n");

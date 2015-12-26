@@ -97,13 +97,10 @@ public class Processer implements Runnable {
             int timeBegIndex = imgFilename.indexOf("_") + 1;
             int timeMidIndex = imgFilename.indexOf("_", timeBegIndex);
             int timeEndIndex = imgFilename.indexOf("_", timeMidIndex + 1);
-            System.out.println(imgFilename);
             String date = imgFilename.substring(timeBegIndex, timeMidIndex);
-            date = date.substring(0, 4) + "-" + date.substring(4, 6) + "-"
-                    + date.substring(6, date.length());
+            date = date.substring(0, 4) + "-" + date.substring(4, 6) + "-" + date.substring(6, date.length());
             String time = imgFilename.substring(timeMidIndex + 1, timeEndIndex);
-            time = time.substring(0, 2) + ":" + time.substring(2, 4) + ":"
-                    + time.substring(4, time.length());
+            time = time.substring(0, 2) + ":" + time.substring(2, 4) + ":" + time.substring(4, time.length());
             String datetime = date + " " + time;
             BufferedImage bimg = imgPair.getVal();
             Pair<Detector, Params> detPair;
@@ -126,17 +123,12 @@ public class Processer implements Runnable {
                 int height = rect.height();
                 BufferedImage subimg = bimg.getSubimage(x, y, width, height);
                 String feature = featureExt.extractIMGfeature(subimg);
-                String label = classifier.classifyOneImg("4 " + feature,
-                        param.finalModelPath, param.scaleParamPath,
-                        param.tempimgfeaturepath,
-                        param.tempscaleimgfeaturepath,
-                        param.tempimageresultpath);
+                String label = classifier.classifyOneImg("4 " + feature, param.finalModelPath, param.scaleParamPath,
+                        param.tempimgfeaturepath, param.tempscaleimgfeaturepath, param.tempimageresultpath);
                 if (!label.equals("0.0")) {
                     System.out.println("检测到异常。");
                     if (dbconn == null) {
-                        JOptionPane.showMessageDialog(null,
-                                "数据库连接错误！所有线路的运行即将停止。", "致命错误",
-                                JOptionPane.ERROR_MESSAGE);
+                        JOptionPane.showMessageDialog(null, "数据库连接错误！所有线路的运行即将停止。", "致命错误", JOptionPane.ERROR_MESSAGE);
                         return;
                     }
                     int retry = 0;
@@ -149,9 +141,7 @@ public class Processer implements Runnable {
                         }
                     }
                     if (retry == maxRetry) {
-                        JOptionPane.showMessageDialog(null,
-                                "数据库连接错误！所有线路的运行即将停止。", "致命错误",
-                                JOptionPane.ERROR_MESSAGE);
+                        JOptionPane.showMessageDialog(null, "数据库连接错误！所有线路的运行即将停止。", "致命错误", JOptionPane.ERROR_MESSAGE);
                         return;
                     }
 
@@ -162,28 +152,20 @@ public class Processer implements Runnable {
                         e.printStackTrace();
                         continue;
                     }
-                    ByteArrayInputStream bais = new ByteArrayInputStream(
-                            baos.toByteArray());
+                    String riskType = null;
+                    switch(label){
+                        case "1.0":
+                            riskType = "杆塔设备";
+                            break;
+                        case "2.0":
+                            riskType = "地面设备";
+                            break;
+                    }
+                    ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
                     String sql = "INSERT INTO Table_AlarmInfo(ImageId, FileNames, FileContent, ImageTime, DetectTime, LineName, CameraName, RiskType, LabelType)"
-                            + " VALUES ('"
-                            + imgFilename
-                            + "','"
-                            + imgFilename
-                            + "',"
-                            + "?"
-                            + ","
-                            + "CONVERT(datetime, '"
-                            + datetime
-                            + "', 20)"
-                            + ","
-                            + "getdate()"
-                            + ",'"
-                            + lineName
-                            + "','"
-                            + lineName
-                            + "','"
-                            + label
-                            + "','" + "Auto" + "')";
+                            + " VALUES ('" + imgFilename + "','" + imgFilename + "'," + "?" + ","
+                            + "CONVERT(datetime, '" + datetime + "', 20)" + "," + "getdate()" + ",'" + lineName + "','"
+                            + lineName + "','" + riskType + "','" + "自动" + "')";
                     boolean status = dbconn.insert(sql, bais);
                     if (status == true) {
                         break;

@@ -21,10 +21,8 @@ public class TrainHelper {
     public static final int     INITIALIZED        = 0;
     public static final int     DIRS_READY         = 1;
     public static final int     FEATURES_EXTRACTED = 2;
-    public static final int     FEATURES_NORMED    = 3;
-    public static final int     DATA_GENERATED     = 4;
-    public static final int     PARAMS_OPTIMIZED   = 5;
-    public static final int     MODEL_TRAINED      = 6;
+    public static final int     PARAMS_OPTIMIZED   = 3;
+    public static final int     MODEL_TRAINED      = 4;
 
     private final String        configFile         = "./config.json";
     private String              lineName;
@@ -49,15 +47,16 @@ public class TrainHelper {
     private double              c;
     private double              g;
     private int                 status             = NOT_INITIALIZED;
+    private String              optiResult;
+    private Thread              featExtThread      = null;
+    private Thread              paramOptiThread    = null;
 
-    public TrainHelper(String lineName, String towerPath, String groundPath,
-            String negPath) {
+    public TrainHelper(String lineName, String towerPath, String groundPath, String negPath) {
         JSONTokener tokener;
         try {
             tokener = new JSONTokener(new FileReader(configFile));
         } catch (FileNotFoundException e) {
-            JOptionPane.showMessageDialog(null, "找不到配置文件。", "错误",
-                    JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(null, "找不到配置文件。", "错误", JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
             return;
         }
@@ -66,8 +65,7 @@ public class TrainHelper {
         try {
             rootPath = jo.getString("config_root_path");
         } catch (JSONException e) {
-            JOptionPane.showMessageDialog(null, "配置文件不完整。", "错误",
-                    JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(null, "配置文件不完整。", "错误", JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
             return;
         }
@@ -112,38 +110,29 @@ public class TrainHelper {
     }
 
     public void featureExtract(JProgressBar proBar, boolean incraseTrain) {
-        ef = new ExtractFeature(lineName, proBar, incraseTrain);
-        ef.setCallback(this);
-        ef.setFolders(towerPath, groundPath, negPath, featurepath);
-        new Thread(ef).start();
+        if (featExtThread == null || featExtThread.isAlive() == false) {
+            ef = new ExtractFeature(lineName, proBar, incraseTrain);
+            ef.setCallback(this);
+            ef.setFolders(towerPath, groundPath, negPath, featurepath);
+            featExtThread = new Thread(ef);
+            featExtThread.start();
+        } else {
+            JOptionPane.showMessageDialog(null, "该过程正在进行，请不要重复点击。", "正在运行", JOptionPane.INFORMATION_MESSAGE);
+        }
     }
 
-    public void stopThread() {
-        ef.setRunFlag(false);
-    }
-
-    public void featureNorm() {
-        ic.scaledata(featurepath, scalefeaturepath, true, scaleparamspath);
-        status = FEATURES_NORMED;
-    }
-
-    public void generateTrainPredict() {
-        ic.generateTrainPredict(scalefeaturepath, 50, trainfeaturepath,
-                predictfeaturepath);
-        status = DATA_GENERATED;
-    }
-
-    public void optiParams() {
-        String[] classes = { "1", "2" };
-        String result = ic.paramoptimize(trainfeaturepath, tempoptmodelpath,
-                predictfeaturepath, tempoptresultpath, classes);
-        int idx1 = result.indexOf(':') + 2;
-        int idx2 = result.indexOf(' ', idx1);
-        c = Double.valueOf(result.substring(idx1, idx2));
-        idx1 = result.indexOf(':', idx2) + 2;
-        idx2 = result.indexOf(' ', idx1);
-        g = Double.valueOf(result.substring(idx1, idx2));
-        status = PARAMS_OPTIMIZED;
+    public void optiParams(JProgressBar proBar) {
+        if (paramOptiThread == null || paramOptiThread.isAlive() == false) {
+            ic.scaledata(featurepath, scalefeaturepath, true, scaleparamspath);
+            ic.generateTrainPredict(scalefeaturepath, 50, trainfeaturepath, predictfeaturepath);
+            String[] classes = { "0", "1", "2" };
+            ic.setFolders(trainfeaturepath, tempoptmodelpath, predictfeaturepath, tempoptresultpath, classes);
+            ic.setCallback(this, proBar);
+            paramOptiThread = new Thread(ic);
+            paramOptiThread.start();
+        } else {
+            JOptionPane.showMessageDialog(null, "该过程正在进行，请不要重复点击。", "正在运行", JOptionPane.INFORMATION_MESSAGE);
+        }
     }
 
     public void train(String recogParam) throws IOException {
@@ -155,12 +144,27 @@ public class TrainHelper {
         status = MODEL_TRAINED;
     }
 
-    public void setStatus(int status, JProgressBar proBar) {
-        if (proBar.getValue() != proBar.getMaximum()) {
-            JOptionPane.showMessageDialog(null, "特征提取过程已完成，可能略过了部分图片。", "完成",
-                    JOptionPane.INFORMATION_MESSAGE);
-        }
+    public void stopThread() {
+        ef.setRunFlag(false);
+        ic.setRunFlag(false);
+    }
+
+    public void featExtrCallback(int status, JProgressBar proBar) {
         this.status = status;
+        JOptionPane.showMessageDialog(null, "特征提取过程完成！", "成功", JOptionPane.INFORMATION_MESSAGE);
+        proBar.setValue(0);
+    }
+
+    public void optiCallBack(String result, int status, JProgressBar proBar) {
+        this.optiResult = result;
+        this.status = status;
+        int idx1 = optiResult.indexOf(':') + 2;
+        int idx2 = optiResult.indexOf(' ', idx1);
+        c = Double.valueOf(optiResult.substring(idx1, idx2));
+        idx1 = optiResult.indexOf(':', idx2) + 2;
+        idx2 = optiResult.indexOf(' ', idx1);
+        g = Double.valueOf(optiResult.substring(idx1, idx2));
+        JOptionPane.showMessageDialog(null, "参数优化过程完成！", "成功", JOptionPane.INFORMATION_MESSAGE);
         proBar.setValue(0);
     }
 }

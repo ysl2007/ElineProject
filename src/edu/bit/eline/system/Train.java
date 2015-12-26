@@ -7,6 +7,7 @@ import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
@@ -50,9 +51,7 @@ public class Train extends JFrame {
     private JPanel            actionPanel;
     private JPanel            increasePanel;
     private JButton           getReady;
-    private JButton           generData;
     private JButton           featExtract;
-    private JButton           featNorm;
     private JButton           paramOpti;
     private JButton           train;
     private JButton           towerDirBrowse;
@@ -74,8 +73,7 @@ public class Train extends JFrame {
         try {
             tokener = new JSONTokener(new FileReader(configFile));
         } catch (FileNotFoundException e) {
-            JOptionPane.showMessageDialog(null, "找不到配置文件。", "错误",
-                    JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(null, "找不到配置文件。", "错误", JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
             return;
         }
@@ -83,8 +81,7 @@ public class Train extends JFrame {
         try {
             rootPath = jo.getString("config_root_path");
         } catch (JSONException e) {
-            JOptionPane.showMessageDialog(null, "配置文件不完整。", "错误",
-                    JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(null, "配置文件不完整。", "错误", JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
             return;
         }
@@ -135,8 +132,7 @@ public class Train extends JFrame {
                 dirChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
                 int returnVal = dirChooser.showOpenDialog(null);
                 if (returnVal == JFileChooser.APPROVE_OPTION) {
-                    String selectedDir = dirChooser.getSelectedFile()
-                            .getAbsolutePath();
+                    String selectedDir = dirChooser.getSelectedFile().getAbsolutePath();
                     towerDirField.setText(selectedDir);
                 }
             }
@@ -146,7 +142,7 @@ public class Train extends JFrame {
         tower.add(towerDirField);
         tower.add(towerDirBrowse);
 
-        JLabel groundDir = new JLabel("杆塔设备样本路径：");
+        JLabel groundDir = new JLabel("地面设备样本路径：");
         groundDirField = new JTextField();
         groundDirField.setColumns(10);
         groundDirBrowse = new JButton("浏览");
@@ -157,8 +153,7 @@ public class Train extends JFrame {
                 dirChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
                 int returnVal = dirChooser.showOpenDialog(null);
                 if (returnVal == JFileChooser.APPROVE_OPTION) {
-                    String selectedDir = dirChooser.getSelectedFile()
-                            .getAbsolutePath();
+                    String selectedDir = dirChooser.getSelectedFile().getAbsolutePath();
                     groundDirField.setText(selectedDir);
                 }
             }
@@ -179,8 +174,7 @@ public class Train extends JFrame {
                 dirChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
                 int returnVal = dirChooser.showOpenDialog(null);
                 if (returnVal == JFileChooser.APPROVE_OPTION) {
-                    String selectedDir = dirChooser.getSelectedFile()
-                            .getAbsolutePath();
+                    String selectedDir = dirChooser.getSelectedFile().getAbsolutePath();
                     negativeDirField.setText(selectedDir);
                 }
             }
@@ -241,7 +235,9 @@ public class Train extends JFrame {
         center.add(increasePanel, incCons);
 
         // 动作按钮
+        Dimension botDim = new Dimension(100, 28);
         getReady = new JButton("准备训练");
+        getReady.setPreferredSize(botDim);
         getReady.setAlignmentX(CENTER_ALIGNMENT);
         getReady.addActionListener(new ActionListener() {
             @Override
@@ -251,6 +247,7 @@ public class Train extends JFrame {
         });
 
         featExtract = new JButton("特征提取");
+        featExtract.setPreferredSize(botDim);
         featExtract.setAlignmentX(CENTER_ALIGNMENT);
         featExtract.addActionListener(new ActionListener() {
             @Override
@@ -259,25 +256,8 @@ public class Train extends JFrame {
             }
         });
 
-        featNorm = new JButton("特征归一化");
-        featNorm.setAlignmentX(CENTER_ALIGNMENT);
-        featNorm.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                featureNorm();
-            }
-        });
-
-        generData = new JButton("准备数据");
-        generData.setAlignmentX(CENTER_ALIGNMENT);
-        generData.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                generateData();
-            }
-        });
-
         paramOpti = new JButton("参数优化");
+        paramOpti.setPreferredSize(botDim);
         paramOpti.setAlignmentX(CENTER_ALIGNMENT);
         paramOpti.addActionListener(new ActionListener() {
             @Override
@@ -287,6 +267,7 @@ public class Train extends JFrame {
         });
 
         train = new JButton("训练");
+        train.setPreferredSize(botDim);
         train.setAlignmentX(CENTER_ALIGNMENT);
         train.addActionListener(new ActionListener() {
             @Override
@@ -296,6 +277,7 @@ public class Train extends JFrame {
         });
 
         exit = new JButton("关闭");
+        exit.setPreferredSize(botDim);
         exit.setAlignmentX(CENTER_ALIGNMENT);
         exit.addActionListener(new ActionListener() {
             @Override
@@ -307,21 +289,27 @@ public class Train extends JFrame {
         // 东侧动作按钮区
         actionPanel = new JPanel();
         actionPanel.setBorder(BorderFactory.createTitledBorder("动作"));
-        actionPanel.setLayout(new BoxLayout(actionPanel, BoxLayout.Y_AXIS));
-        actionPanel.add(Box.createVerticalStrut(10));
         actionPanel.add(getReady);
-        actionPanel.add(Box.createVerticalStrut(20));
         actionPanel.add(featExtract);
-        actionPanel.add(Box.createVerticalStrut(20));
-        actionPanel.add(featNorm);
-        actionPanel.add(Box.createVerticalStrut(20));
-        actionPanel.add(generData);
-        actionPanel.add(Box.createVerticalStrut(20));
         actionPanel.add(paramOpti);
-        actionPanel.add(Box.createVerticalStrut(20));
         actionPanel.add(train);
-        actionPanel.add(Box.createVerticalStrut(20));
         actionPanel.add(exit);
+
+        GridBagLayout actLayout = new GridBagLayout();
+        GridBagConstraints gbcon = new GridBagConstraints();
+        gbcon.insets = new Insets(10, 5, 8, 5);
+        gbcon.gridx = 0;
+        gbcon.gridy = 0;
+        actLayout.setConstraints(getReady, gbcon);
+        gbcon.gridy = 1;
+        actLayout.setConstraints(featExtract, gbcon);
+        gbcon.gridy = 2;
+        actLayout.setConstraints(paramOpti, gbcon);
+        gbcon.gridy = 3;
+        actLayout.setConstraints(train, gbcon);
+        gbcon.gridy = 4;
+        actLayout.setConstraints(exit, gbcon);
+        actionPanel.setLayout(actLayout);
 
         // 南侧进度条部分
         progressBar = new JProgressBar();
@@ -349,116 +337,73 @@ public class Train extends JFrame {
         name.setEditable(false);
         String lineName = name.getText();
         if (lineName == null || lineName.length() == 0) {
-            JOptionPane.showMessageDialog(null, "没有指定线路名称。", "错误",
-                    JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(null, "没有指定线路名称。", "错误", JOptionPane.ERROR_MESSAGE);
             name.setEditable(true);
             return;
         }
         String towerDir = towerDirField.getText();
         String groundDir = groundDirField.getText();
         String negDir = negativeDirField.getText();
-        if (towerDir.trim().length() == 0 || groundDir.trim().length() == 0
-                || negDir.trim().length() == 0) {
-            JOptionPane.showMessageDialog(null, "没有选择样本路径。", "错误",
-                    JOptionPane.ERROR_MESSAGE);
+        if (towerDir.trim().length() == 0 || groundDir.trim().length() == 0 || negDir.trim().length() == 0) {
+            JOptionPane.showMessageDialog(null, "没有选择样本路径。", "错误", JOptionPane.ERROR_MESSAGE);
             return;
         }
         tHelper = new TrainHelper(lineName, towerDir, groundDir, negDir);
         tHelper.getDirsReady();
         if (validateStatus(TrainHelper.DIRS_READY) == 0) {
-            JOptionPane.showMessageDialog(null, "训练准备完成！", "成功",
-                    JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(null, "训练准备完成！", "成功", JOptionPane.INFORMATION_MESSAGE);
         }
     }
 
     private void featureExtract() {
         if (validateStatus(TrainHelper.DIRS_READY) == -1) {
-            JOptionPane.showMessageDialog(null, "前一步骤尚未完成！", "错误",
-                    JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(null, "前一步骤尚未完成！", "错误", JOptionPane.ERROR_MESSAGE);
             return;
         }
         tHelper.featureExtract(progressBar, increaseTrain);
-        if (validateStatus(TrainHelper.FEATURES_EXTRACTED) == 0) {
-            JOptionPane.showMessageDialog(null, "特征提取完成！", "成功",
-                    JOptionPane.INFORMATION_MESSAGE);
-        }
-    }
-
-    private void featureNorm() {
-        if (validateStatus(TrainHelper.FEATURES_EXTRACTED) == -1) {
-            JOptionPane.showMessageDialog(null, "前一步骤尚未完成！", "错误",
-                    JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-        tHelper.featureNorm();
-        if (validateStatus(TrainHelper.FEATURES_NORMED) == 0) {
-            JOptionPane.showMessageDialog(null, "特征归一化完成！", "成功",
-                    JOptionPane.INFORMATION_MESSAGE);
-        }
-    }
-
-    private void generateData() {
-        if (validateStatus(TrainHelper.FEATURES_NORMED) == -1) {
-            JOptionPane.showMessageDialog(null, "前一步骤尚未完成！", "错误",
-                    JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-        tHelper.generateTrainPredict();
-        if (validateStatus(TrainHelper.DATA_GENERATED) == 0) {
-            JOptionPane.showMessageDialog(null, "训练数据准备完成！", "成功",
-                    JOptionPane.INFORMATION_MESSAGE);
-        }
     }
 
     private void optiParams() {
-        if (validateStatus(TrainHelper.DATA_GENERATED) == -1) {
-            JOptionPane.showMessageDialog(null, "前一步骤尚未完成！", "错误",
-                    JOptionPane.ERROR_MESSAGE);
+        if (validateStatus(TrainHelper.FEATURES_EXTRACTED) == -1) {
+            JOptionPane.showMessageDialog(null, "前一步骤尚未完成！", "错误", JOptionPane.ERROR_MESSAGE);
             return;
         }
-        tHelper.optiParams();
+        tHelper.optiParams(progressBar);
         if (validateStatus(TrainHelper.PARAMS_OPTIMIZED) == 0) {
-            JOptionPane.showMessageDialog(null, "参数优化完成！", "成功",
-                    JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(null, "参数优化完成！", "成功", JOptionPane.INFORMATION_MESSAGE);
         }
     }
 
     private void train() {
         if (validateStatus(TrainHelper.PARAMS_OPTIMIZED) == -1) {
-            JOptionPane.showMessageDialog(null, "前一步骤尚未完成！", "错误",
-                    JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(null, "前一步骤尚未完成！", "错误", JOptionPane.ERROR_MESSAGE);
             return;
         }
         System.out.println(var);
         String varVal = var.getText();
         String alphVal = alpha.getText();
         String areaVal = minArea.getText();
-        if (varVal.length() == 0 || alphVal.length() == 0
-                || areaVal.length() == 0) {
-            JOptionPane.showMessageDialog(null, "未指定识别参数。", "错误",
-                    JOptionPane.ERROR_MESSAGE);
+        if (varVal.length() == 0 || alphVal.length() == 0 || areaVal.length() == 0) {
+            JOptionPane.showMessageDialog(null, "未指定识别参数。", "错误", JOptionPane.ERROR_MESSAGE);
             return;
         }
         String recogParam = varVal + " " + alphVal + " " + areaVal;
         try {
             tHelper.train(recogParam);
         } catch (IOException e) {
-            JOptionPane.showMessageDialog(null, "文件写入错误。", "错误",
-                    JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(null, "文件写入错误。", "错误", JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
             return;
         }
         if (validateStatus(TrainHelper.MODEL_TRAINED) == 0) {
-            JOptionPane.showMessageDialog(null, "训练完成！", "成功",
-                    JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(null, "训练完成！", "成功", JOptionPane.INFORMATION_MESSAGE);
         }
     }
 
     @Override
     public void dispose() {
         if (tHelper != null && validateStatus(TrainHelper.MODEL_TRAINED) != 0) {
-            int status = JOptionPane.showConfirmDialog(null,
-                    "训练尚未完成，如果关闭窗口，则会删除已有临时文件，是否继续？", "训练未完成",
+            int status = JOptionPane.showConfirmDialog(null, "训练尚未完成，如果关闭窗口，则会删除已有临时文件，是否继续？", "训练未完成",
                     JOptionPane.YES_NO_OPTION);
             if (status == JOptionPane.YES_OPTION) {
                 tHelper.stopThread();
@@ -492,6 +437,6 @@ public class Train extends JFrame {
     }
 
     public static void main(String[] args) {
-        new Train("摄像头1");
+        new Train("安都17(动态风险)");
     }
 }
