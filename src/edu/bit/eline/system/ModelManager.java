@@ -36,36 +36,34 @@ public class ModelManager extends JFrame {
     private String            curSelectedLine;
     private String            curSelectedModel;
 
-    private Container         container;
-    private JButton           refresh;
-    private JButton           trainModel;
-    private JButton           delModel;
-    private JButton           add;
-    private JList<String>     cameraList;
-    private JList<String>     modelList;
-    private JPanel            leftPane;
-    private JPanel            midPane;
-    private JPanel            rightPane;
-    private JScrollPane       cameraListController;
-    private JScrollPane       modelListController;
+    private Container     container;
+    private JButton       refresh;
+    private JButton       trainModel;
+    private JButton       delModel;
+    private JButton       add;
+    private JList<String> cameraList;
+    private JList<String> modelList;
+    private JPanel        leftPane;
+    private JPanel        midPane;
+    private JPanel        rightPane;
+    private JScrollPane   cameraListController;
+    private JScrollPane   modelListController;
 
     public ModelManager(List<String> lineList) {
         JSONTokener tokener;
         try {
             tokener = new JSONTokener(new FileReader(configFile));
         } catch (FileNotFoundException e) {
-            JOptionPane.showMessageDialog(null, "找不到配置文件。", "错误",
-                    JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(null, "找不到配置文件。", "错误", JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
             return;
         }
         JSONObject jo = new JSONObject(tokener);
         String configPath;
-        try{
-        configPath = jo.getString("config_root_path");
-        } catch (JSONException e){
-            JOptionPane.showMessageDialog(null, "配置文件不完整。", "错误",
-                    JOptionPane.ERROR_MESSAGE);
+        try {
+            configPath = jo.getString("config_root_path");
+        } catch (JSONException e) {
+            JOptionPane.showMessageDialog(null, "配置文件不完整。", "错误", JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
             return;
         }
@@ -139,8 +137,7 @@ public class ModelManager extends JFrame {
             @Override
             public void actionPerformed(ActionEvent arg0) {
                 if (!refreshModelList()) {
-                    JOptionPane.showMessageDialog(null, "获取模型列表失败，请检查配置文件夹。",
-                            "错误", JOptionPane.WARNING_MESSAGE);
+                    JOptionPane.showMessageDialog(null, "获取模型列表失败，请检查配置文件夹。", "错误", JOptionPane.WARNING_MESSAGE);
                 }
             }
         });
@@ -152,8 +149,7 @@ public class ModelManager extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (curSelectedLine == null)
-                    JOptionPane.showMessageDialog(null, "没有选择任何线路。", "错误",
-                            JOptionPane.WARNING_MESSAGE);
+                    JOptionPane.showMessageDialog(null, "没有选择任何线路。", "错误", JOptionPane.WARNING_MESSAGE);
                 else
                     new Train(curSelectedLine);
             }
@@ -195,18 +191,15 @@ public class ModelManager extends JFrame {
 
     private void deleteModel() {
         if (curSelectedModel == null || curSelectedModel.length() == 0) {
-            JOptionPane.showMessageDialog(null, "没有选择任何模型", "没有选择模型",
-                    JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(null, "没有选择任何模型", "没有选择模型", JOptionPane.WARNING_MESSAGE);
         } else {
-            int selectedOption = JOptionPane.showConfirmDialog(null,
-                    "确定删除所选模型吗？", "确认删除", JOptionPane.OK_CANCEL_OPTION);
+            int selectedOption = JOptionPane.showConfirmDialog(null, "确定删除所选模型吗？", "确认删除",
+                    JOptionPane.OK_CANCEL_OPTION);
             if (selectedOption == JOptionPane.OK_OPTION) {
                 if (!Utils.delete(new File("./config/" + curSelectedModel))) {
-                    JOptionPane.showMessageDialog(null, "删除失败，可能有文件未删除。",
-                            "删除失败", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(null, "删除失败，可能有文件未删除。", "删除失败", JOptionPane.ERROR_MESSAGE);
                 } else {
-                    JOptionPane.showMessageDialog(null, "删除成功！", "成功",
-                            JOptionPane.PLAIN_MESSAGE);
+                    JOptionPane.showMessageDialog(null, "删除成功！", "成功", JOptionPane.PLAIN_MESSAGE);
                 }
                 refreshModelList();
             }

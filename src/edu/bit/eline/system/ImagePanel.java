@@ -30,8 +30,7 @@ public class ImagePanel extends JPanel {
         this.imgHeight = imgHeight;
     }
 
-    public ImagePanel() {
-    }
+    public ImagePanel() {}
 
     public void setImage(Image img) {
         if (null != img) {

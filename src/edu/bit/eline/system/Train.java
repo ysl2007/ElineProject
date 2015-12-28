@@ -41,32 +41,32 @@ public class Train extends JFrame {
     private String            rootPath;
     private boolean           increaseTrain    = false;
 
-    private Container         container;
-    private JPanel            detParams;
-    private JPanel            center;
-    private JPanel            topPanel;
-    private JPanel            detection;
-    private JPanel            samplePanel;
-    private JPanel            buttonPanel;
-    private JPanel            actionPanel;
-    private JPanel            increasePanel;
-    private JButton           getReady;
-    private JButton           featExtract;
-    private JButton           paramOpti;
-    private JButton           train;
-    private JButton           towerDirBrowse;
-    private JButton           groundDirBrowse;
-    private JButton           negativeDirBrowse;
-    private JButton           exit;
-    private JCheckBox         increase;
-    private JTextField        name;
-    private JTextField        var;
-    private JTextField        alpha;
-    private JTextField        minArea;
-    private JTextField        towerDirField;
-    private JTextField        groundDirField;
-    private JTextField        negativeDirField;
-    private JProgressBar      progressBar;
+    private Container    container;
+    private JPanel       detParams;
+    private JPanel       center;
+    private JPanel       topPanel;
+    private JPanel       detection;
+    private JPanel       samplePanel;
+    private JPanel       buttonPanel;
+    private JPanel       actionPanel;
+    private JPanel       increasePanel;
+    private JButton      getReady;
+    private JButton      featExtract;
+    private JButton      paramOpti;
+    private JButton      train;
+    private JButton      towerDirBrowse;
+    private JButton      groundDirBrowse;
+    private JButton      negativeDirBrowse;
+    private JButton      exit;
+    private JCheckBox    increase;
+    private JTextField   name;
+    private JTextField   var;
+    private JTextField   alpha;
+    private JTextField   minArea;
+    private JTextField   towerDirField;
+    private JTextField   groundDirField;
+    private JTextField   negativeDirField;
+    private JProgressBar progressBar;
 
     public Train(String lineName) {
         JSONTokener tokener;
@@ -409,8 +409,7 @@ public class Train extends JFrame {
                 tHelper.stopThread();
                 Utils.delete(new File(rootPath + "/models/" + name.getText()));
             }
-        } else {
-        }
+        } else {}
         super.dispose();
     }
 

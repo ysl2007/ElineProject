@@ -28,8 +28,7 @@ public class SQLConnection {
         try {
             tokener = new JSONTokener(new FileReader(configFile));
         } catch (FileNotFoundException e) {
-            JOptionPane.showMessageDialog(null, "找不到配置文件。", "错误",
-                    JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(null, "找不到配置文件。", "错误", JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
             return;
         }
@@ -39,8 +38,7 @@ public class SQLConnection {
             userName = jo.getString("database_username");
             passwd = jo.getString("database_password");
         } catch (JSONException e) {
-            JOptionPane.showMessageDialog(null, "配置文件不完整。", "错误",
-                    JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(null, "配置文件不完整。", "错误", JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
             return;
         }
@@ -84,8 +82,8 @@ public class SQLConnection {
             return false;
         }
     }
-    
-    public ResultSet select(String sql) throws SQLException{
+
+    public ResultSet select(String sql) throws SQLException {
         Statement stmt = dbConn.createStatement();
         ResultSet result = stmt.executeQuery(sql);
         return result;

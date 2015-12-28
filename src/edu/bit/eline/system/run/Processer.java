@@ -40,7 +40,6 @@ public class Processer implements Runnable {
         converter = new ImageConverter();
         featureExt = new ExtractFeature();
         classifier = new ImageClassification();
-        dbconn = new SQLConnection();
         analyzer = new BlobAnalyzer(4000);
     }
 
@@ -88,6 +87,7 @@ public class Processer implements Runnable {
 
     @Override
     public void run() {
+        dbconn = new SQLConnection();
         while (!Thread.interrupted()) {
             Pair<String, Pair<String, BufferedImage>> pair = store.get();
             System.out.println("获取到新图片。");
@@ -153,7 +153,7 @@ public class Processer implements Runnable {
                         continue;
                     }
                     String riskType = null;
-                    switch(label){
+                    switch (label) {
                         case "1.0":
                             riskType = "杆塔设备";
                             break;

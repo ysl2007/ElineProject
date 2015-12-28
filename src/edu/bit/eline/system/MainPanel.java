@@ -56,21 +56,21 @@ public class MainPanel extends JFrame {
     private ImageStorage      storage;
     private ImageProvider     imgProvider;
 
-    private Container         container;
-    private JTree             treePanel;
-    private JLabel            statusTitle;
-    private JLabel            status;
-    private JPanel            commandPanel;
-    private JPanel            eastPanel;
-    private JPanel            centerPanel;
-    private JPanel            statusPanel;
-    private JButton           getTree;
-    private JButton           modelManager;
-    private JButton           runLine;
-    private JButton           runAll;
-    private JButton           stopLine;
-    private JButton           stopAll;
-    private JScrollPane       treeController;
+    private Container   container;
+    private JTree       treePanel;
+    private JLabel      statusTitle;
+    private JLabel      status;
+    private JPanel      commandPanel;
+    private JPanel      eastPanel;
+    private JPanel      centerPanel;
+    private JPanel      statusPanel;
+    private JButton     getTree;
+    private JButton     modelManager;
+    private JButton     runLine;
+    private JButton     runAll;
+    private JButton     stopLine;
+    private JButton     stopAll;
+    private JScrollPane treeController;
 
     class TreeCellRenderer extends DefaultTreeCellRenderer {
         private static final long serialVersionUID = -8890987966973311991L;
@@ -101,9 +101,8 @@ public class MainPanel extends JFrame {
 
         storage = new ImageStorage();
         processer = new Processer(storage);
-        imgProvider = new ImageProvider(storage, processer);
-
         setupGUI();
+        imgProvider = new ImageProvider(storage, processer);
 
         new Thread(imgProvider).start();
         new Thread(processer).start();

@@ -76,11 +76,9 @@ public class Negative1 {
                     int y = rect.y();
                     int width = rect.width();
                     int height = rect.height();
-                    BufferedImage subimg = bufimg.getSubimage(x, y, width,
-                            height);
+                    BufferedImage subimg = bufimg.getSubimage(x, y, width, height);
                     try {
-                        ImageIO.write(subimg, "bmp", new File(dest
-                                + subimgCount + ".bmp"));
+                        ImageIO.write(subimg, "bmp", new File(dest + subimgCount + ".bmp"));
                         subimgInOneImageCount += 1;
                         subimgCount += 1;
                     } catch (IOException e) {
@@ -99,8 +97,7 @@ public class Negative1 {
     }
 
     protected CvRect getTag(String imgName) throws IOException {
-        BufferedReader br = new BufferedReader(new FileReader(new File(imgName
-                + ".txt")));
+        BufferedReader br = new BufferedReader(new FileReader(new File(imgName + ".txt")));
         String line;
         while ((line = br.readLine()) != null) {
             if (line.startsWith("LeftTop"))
@@ -132,14 +129,12 @@ public class Negative1 {
         int rcty2 = rcty1 + rect.height();
 
         if (rctx1 >= tagx1 && rctx1 <= tagx2) {
-            if ((rcty1 >= tagy1 && rcty1 <= tagy2)
-                    || (rcty2 >= tagy1 && rcty2 <= tagy2)) {
+            if ((rcty1 >= tagy1 && rcty1 <= tagy2) || (rcty2 >= tagy1 && rcty2 <= tagy2)) {
                 return false;
             }
         }
         if (rctx2 >= tagx1 && rctx2 <= tagx2) {
-            if ((rcty1 >= tagy1 && rcty1 <= tagy2)
-                    || (rcty2 >= tagy1 && rcty2 <= tagy2)) {
+            if ((rcty1 >= tagy1 && rcty1 <= tagy2) || (rcty2 >= tagy1 && rcty2 <= tagy2)) {
                 return false;
             }
         }

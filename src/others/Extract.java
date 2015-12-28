@@ -40,20 +40,20 @@ public class Extract {
                 }
                 String objType = line.trim().substring(8);
                 switch (objType) {
-                case "crane":
-                    dest += "/1/";
-                    break;
-                case "pump":
-                    dest += "/1/";
-                    break;
-                case "diggerLoader":
-                    dest += "/2/";
-                    break;
-                case "tower":
-                    dest += "/1/";
-                    break;
-                default:
-                    break;
+                    case "crane":
+                        dest += "/1/";
+                        break;
+                    case "pump":
+                        dest += "/1/";
+                        break;
+                    case "diggerLoader":
+                        dest += "/2/";
+                        break;
+                    case "tower":
+                        dest += "/1/";
+                        break;
+                    default:
+                        break;
                 }
                 while (!line.startsWith("LeftTop")) {
                     line = br.readLine();
