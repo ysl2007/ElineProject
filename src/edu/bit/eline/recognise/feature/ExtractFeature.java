@@ -36,8 +36,7 @@ public class ExtractFeature implements Runnable {
     private TrainHelper  th;
     private JProgressBar proBar;
 
-    public ExtractFeature() {
-    }
+    public ExtractFeature() {}
 
     public ExtractFeature(String lineName, JProgressBar proBar, boolean increase) {
         this.proBar = proBar;
@@ -159,18 +158,17 @@ public class ExtractFeature implements Runnable {
         File dir = new File(foldpath);
         File[] imgs = dir.listFiles(new FilenameFilter() {
             public boolean accept(File dir, String name) {
-                return name.toLowerCase().endsWith("bmp") || name.toLowerCase().endsWith("jpg");
+                return name.toLowerCase().endsWith("bmp") || name.toLowerCase().endsWith("jpg")
+                        || name.toLowerCase().endsWith("png");
             }
         });
         if (imgs.length > 0) {
             for (int j = 0; j < imgs.length; j++) {
                 list.add(imgs[j].getAbsolutePath());
             }
-
             String strings[] = new String[list.size()];
             for (int i = 0, j = list.size(); i < j; i++)
                 strings[i] = list.get(i);
-
             return strings;
         } else
             return null;
