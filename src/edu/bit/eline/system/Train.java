@@ -436,6 +436,6 @@ public class Train extends JFrame {
     }
 
     public static void main(String[] args) {
-        new Train("安都17(动态风险)");
+        new Train("line");
     }
 }

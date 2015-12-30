@@ -94,7 +94,8 @@ public class ImageClassification implements Runnable {
 
     public String paramoptimize() {
         double bestCcandi = 0, bestGcandi = 0;
-        double bestrec = 0, bestacc = 0, bestc = 0, bestg = 0;
+//        double bestrec = 0;
+        double bestacc = 0, bestc = 0, bestg = 0;
         int stage = 0;
         for (int i = -2; i <= 2; i++) {
             for (int j = -10; j <= 10; j++) {
@@ -109,17 +110,21 @@ public class ImageClassification implements Runnable {
                 predict("-b 0", predictpath, modelpath, resultpath);
                 Evaluater eva = new Evaluater(classes, getLabels(resultpath), getLabels(predictpath));
                 double acc = eva.getAccuracy();
-                double rec = eva.getRecall();
-                if (acc >= bestacc && rec >= bestrec){
-                    bestCcandi = c;
-                    bestGcandi = g;
-                }
-                if (acc > 0.5 && rec > bestrec) {
-                    bestacc = acc;
-                    bestrec = rec;
+                if (acc > bestacc){
                     bestc = c;
                     bestg = g;
                 }
+//                double rec = eva.getRecall();
+//                if (acc >= bestacc && rec >= bestrec){
+//                    bestCcandi = c;
+//                    bestGcandi = g;
+//                }
+//                if (acc > 0.5 && rec > bestrec) {
+//                    bestacc = acc;
+//                    bestrec = rec;
+//                    bestc = c;
+//                    bestg = g;
+//                }
                 ++stage;
                 proBar.setValue((int) ((float) stage / 105 * 100));
             }
