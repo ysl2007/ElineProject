@@ -22,56 +22,53 @@ public class DryRun {
     public static void run(String path, String dest) {
         path += '/';
         dest += '/';
-        String[] subDirs = DirProcesser.getSubDirs(path);
 
         int subimgCount = 0;
-        for (String subDir : subDirs) {
-            String dir = path + subDir + '/';
-            String[] imgList = DirProcesser.getFilenames(dir, "jpg");
-            Detector detector = new Detector(0, 9, false);
-            BlobAnalyzer analyzer = new BlobAnalyzer(2000);
-            ImageConverter converter = new ImageConverter();
+        String[] imgList = DirProcesser.getFilenames(path, "jpg");
+        Detector detector = new Detector(0, 9, false);
+        BlobAnalyzer analyzer = new BlobAnalyzer(100);
+        ImageConverter converter = new ImageConverter();
+        int srcImgIndex = 0;
+        for (int i = 0; i < imgList.length; ++i) {
+            String imgName = path + imgList[i];
+            BufferedImage img;
+            try {
+                img = ImageIO.read(new File(imgName));
+            } catch (IOException e1) {
+                e1.printStackTrace();
+                continue;
+            }
 
-            int srcImgIndex = 0;
-            for (int i = 0; i < imgList.length; ++i) {
-                String imgName = dir + imgList[i];
-                BufferedImage img;
+            srcImgIndex += 1;
+            Mat imgMat = converter.convert2Mat(img);
+            if (imgMat == null)
+                continue;
+            IplImage mask = detector.detect(imgMat, 0.1, true);
+
+            if (srcImgIndex < 15)
+                continue;
+            List<Blob> blobList = analyzer.analyze(mask);
+            for (Blob blob : blobList) {
+                CvRect rect = blob.getRect();
+                if (!sizeLimit(rect))
+                    continue;
+
+                int x = rect.x();
+                int y = rect.y();
+                int width = rect.width();
+                int height = rect.height();
+                BufferedImage subimg = img.getSubimage(x, y, width, height);
+
                 try {
-                    img = ImageIO.read(new File(imgName));
-                } catch (IOException e1) {
-                    e1.printStackTrace();
+                    ImageIO.write(subimg, "bmp", new File(dest + imgList[i] + ".sub" + subimgCount + ".bmp"));
+                    subimgCount += 1;
+                } catch (IOException e) {
+                    e.printStackTrace();
                     continue;
                 }
 
-                srcImgIndex += 1;
-                Mat imgMat = converter.convert2Mat(img);
-                if (imgMat == null)
-                    continue;
-                IplImage mask = detector.detect(imgMat, 0.1, true);
-
-                if (srcImgIndex < 10)
-                    continue;
-                List<Blob> blobList;
-                blobList = analyzer.analyze(mask);
-                for (Blob blob : blobList) {
-                    CvRect rect = blob.getRect();
-                    if (!sizeLimit(rect))
-                        continue;
-                    int x = rect.x();
-                    int y = rect.y();
-                    int width = rect.width();
-                    int height = rect.height();
-                    BufferedImage subimg = img.getSubimage(x, y, width, height);
-                    try {
-                        ImageIO.write(subimg, "bmp", new File(dest + subimgCount + ".bmp"));
-                        subimgCount += 1;
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                        continue;
-                    }
-                    if (subimgCount % 100 == 0)
-                        System.out.println(subimgCount);
-                }
+                if (subimgCount % 100 == 0)
+                    System.out.println(subimgCount);
             }
         }
     }
@@ -128,7 +125,7 @@ public class DryRun {
         int height = rect.height();
         int width = rect.width();
         int size = height * width;
-        if (size < 750 || size > 50000) {
+        if (size < 2000) {
             return false;
         }
         if (height < 30 || width < 30) {

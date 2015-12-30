@@ -29,11 +29,9 @@ public class ExtractFeature implements Runnable {
     private boolean      goOn = true;
     private JProgressBar proBar;
 
-    public ExtractFeature() {
-    }
+    public ExtractFeature() {}
 
-    public ExtractFeature(String posPath, String negPath, String feature,
-            String pos, JProgressBar proBar) {
+    public ExtractFeature(String posPath, String negPath, String feature, String pos, JProgressBar proBar) {
         this.posPath = posPath;
         this.negPath = negPath;
         this.featurefilepath = feature;
@@ -47,30 +45,22 @@ public class ExtractFeature implements Runnable {
             AnnotationAnalysis aa = new AnnotationAnalysis(filelist[i]);
             String rect = aa.getRect();
             String lefttop = rect.substring(0, rect.indexOf(";"));
-            String rightlow = rect.substring(rect.indexOf(";") + 1,
-                    rect.length());
-            int lefttopx = Integer.parseInt(lefttop.substring(0,
-                    lefttop.indexOf(",")));
-            int lefttopy = Integer.parseInt(lefttop.substring(
-                    lefttop.indexOf(",") + 1, lefttop.length()));
-            int rightlowx = Integer.parseInt(rightlow.substring(0,
-                    rightlow.indexOf(",")));
-            int rightlowy = Integer.parseInt(rightlow.substring(
-                    rightlow.indexOf(",") + 1, rightlow.length()));
+            String rightlow = rect.substring(rect.indexOf(";") + 1, rect.length());
+            int lefttopx = Integer.parseInt(lefttop.substring(0, lefttop.indexOf(",")));
+            int lefttopy = Integer.parseInt(lefttop.substring(lefttop.indexOf(",") + 1, lefttop.length()));
+            int rightlowx = Integer.parseInt(rightlow.substring(0, rightlow.indexOf(",")));
+            int rightlowy = Integer.parseInt(rightlow.substring(rightlow.indexOf(",") + 1, rightlow.length()));
 
             if (lefttopx == rightlowx || lefttopy == rightlowy) {
                 ;
             } else {
                 try {
-                    File imgfile = new File(aa.getfilepath() + "/"
-                            + aa.getfileName());
+                    File imgfile = new File(aa.getfilepath() + "/" + aa.getfileName());
                     BufferedImage bi = ImageIO.read(imgfile);
                     BufferedImage subimg = null;
-                    subimg = bi.getSubimage(lefttopx, lefttopy, rightlowx
-                            - lefttopx, rightlowy - lefttopy);
-                    ImageIO.write(subimg, "BMP", new File(destfoldpath + "/"
-                            + aa.getobjType().trim() + "/" + aa.getfileName()
-                            + ".sub.bmp"));
+                    subimg = bi.getSubimage(lefttopx, lefttopy, rightlowx - lefttopx, rightlowy - lefttopy);
+                    ImageIO.write(subimg, "BMP", new File(
+                            destfoldpath + "/" + aa.getobjType().trim() + "/" + aa.getfileName() + ".sub.bmp"));
 
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -91,8 +81,7 @@ public class ExtractFeature implements Runnable {
         String[] subDirs = rootDir.list();
         List<String> list = new ArrayList<String>();
         for (int i = 0; i < subDirs.length; ++i) {
-            String subdir = new String(rootDir.getAbsolutePath() + "\\"
-                    + subDirs[i] + "\\");
+            String subdir = new String(rootDir.getAbsolutePath() + "\\" + subDirs[i] + "\\");
             File dir = new File(subdir);
 
             File[] imgs = dir.listFiles(new FilenameFilter() {
@@ -117,8 +106,7 @@ public class ExtractFeature implements Runnable {
         File dir = new File(foldpath);
         File[] imgs = dir.listFiles(new FilenameFilter() {
             public boolean accept(File dir, String name) {
-                return name.toLowerCase().endsWith("bmp")
-                        || name.toLowerCase().endsWith("jpg");
+                return name.toLowerCase().endsWith("bmp") || name.toLowerCase().endsWith("jpg");
             }
         });
         if (imgs.length > 0) {
@@ -147,26 +135,19 @@ public class ExtractFeature implements Runnable {
         String features = "";
         try {
             ac.extract(subimg);
-            features = features + "AutoColorCorrelogram: "
-                    + ac.getStringRepresentation() + ";@";
+            features = features + "AutoColorCorrelogram: " + ac.getStringRepresentation() + ";@";
             cd.extract(subimg);
-            features = features + "CEDD: " + cd.getStringRepresentation()
-                    + ";@";
+            features = features + "CEDD: " + cd.getStringRepresentation() + ";@";
             cl.extract(subimg);
-            features = features + "ColorLayout: "
-                    + cl.getStringRepresentation() + ";@";
+            features = features + "ColorLayout: " + cl.getStringRepresentation() + ";@";
             ed.extract(subimg);
-            features = features + "EdgeHistogram: "
-                    + ed.getStringRepresentation() + ";@";
+            features = features + "EdgeHistogram: " + ed.getStringRepresentation() + ";@";
             sc.extract(subimg);
-            features = features + "ScalableColor: "
-                    + sc.getStringRepresentation() + ";@";
+            features = features + "ScalableColor: " + sc.getStringRepresentation() + ";@";
             ft.extract(subimg);
-            features = features + "FCTH: " + ft.getStringRepresentation()
-                    + ";@";
+            features = features + "FCTH: " + ft.getStringRepresentation() + ";@";
             tm.extract(subimg);
-            features = features + "Tamura: " + tm.getStringRepresentation()
-                    + ";@";
+            features = features + "Tamura: " + tm.getStringRepresentation() + ";@";
             return formatfeatures(features);
         } catch (Exception e) {
             e.printStackTrace();
@@ -188,26 +169,19 @@ public class ExtractFeature implements Runnable {
             File imgfile = new File(filepath);
             BufferedImage subimg = ImageIO.read(imgfile);
             ac.extract(subimg);
-            features = features + "AutoColorCorrelogram: "
-                    + ac.getStringRepresentation() + ";@";
+            features = features + "AutoColorCorrelogram: " + ac.getStringRepresentation() + ";@";
             cd.extract(subimg);
-            features = features + "CEDD: " + cd.getStringRepresentation()
-                    + ";@";
+            features = features + "CEDD: " + cd.getStringRepresentation() + ";@";
             cl.extract(subimg);
-            features = features + "ColorLayout: "
-                    + cl.getStringRepresentation() + ";@";
+            features = features + "ColorLayout: " + cl.getStringRepresentation() + ";@";
             ed.extract(subimg);
-            features = features + "EdgeHistogram: "
-                    + ed.getStringRepresentation() + ";@";
+            features = features + "EdgeHistogram: " + ed.getStringRepresentation() + ";@";
             sc.extract(subimg);
-            features = features + "ScalableColor: "
-                    + sc.getStringRepresentation() + ";@";
+            features = features + "ScalableColor: " + sc.getStringRepresentation() + ";@";
             ft.extract(subimg);
-            features = features + "FCTH: " + ft.getStringRepresentation()
-                    + ";@";
+            features = features + "FCTH: " + ft.getStringRepresentation() + ";@";
             tm.extract(subimg);
-            features = features + "Tamura: " + tm.getStringRepresentation()
-                    + ";@";
+            features = features + "Tamura: " + tm.getStringRepresentation() + ";@";
             return formatfeatures(features);
         } catch (Exception e) {
             e.printStackTrace();
@@ -218,23 +192,17 @@ public class ExtractFeature implements Runnable {
     public String formatfeatures(String sourcefeature) {
         String[] strarrs = sourcefeature.split("@");
         String featurestr = "";
-        featurestr += strarrs[1].substring(strarrs[1].indexOf(" ", 7),
-                strarrs[1].length() - 1).trim();
+        featurestr += strarrs[1].substring(strarrs[1].indexOf(" ", 7), strarrs[1].length() - 1).trim();
         featurestr += " ";
-        featurestr += strarrs[2].substring(strarrs[2].indexOf(" ", 0),
-                strarrs[2].length() - 1).trim();
+        featurestr += strarrs[2].substring(strarrs[2].indexOf(" ", 0), strarrs[2].length() - 1).trim();
         featurestr += " ";
-        featurestr += strarrs[3].substring(strarrs[3].indexOf(";", 20) + 1,
-                strarrs[3].length() - 1).trim();
+        featurestr += strarrs[3].substring(strarrs[3].indexOf(";", 20) + 1, strarrs[3].length() - 1).trim();
         featurestr += " ";
-        featurestr += strarrs[4].substring(strarrs[4].indexOf(";", 31) + 1,
-                strarrs[4].length() - 1).trim();
+        featurestr += strarrs[4].substring(strarrs[4].indexOf(";", 31) + 1, strarrs[4].length() - 1).trim();
         featurestr += " ";
-        featurestr += strarrs[5].substring(strarrs[5].indexOf(" ", 7) + 1,
-                strarrs[5].length() - 1).trim();
+        featurestr += strarrs[5].substring(strarrs[5].indexOf(" ", 7) + 1, strarrs[5].length() - 1).trim();
         featurestr += " ";
-        featurestr += strarrs[6].substring(strarrs[6].indexOf(" ", 10) + 1,
-                strarrs[6].length() - 1).trim();
+        featurestr += strarrs[6].substring(strarrs[6].indexOf(" ", 10) + 1, strarrs[6].length() - 1).trim();
 
         return addnum(featurestr);
     }

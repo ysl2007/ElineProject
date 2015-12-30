@@ -51,16 +51,16 @@ public class ImageClassification {
      * System.out.println(result4); System.out.println(result5); }
      */
     /*
-     * public void trainallwithoptparams() {
-     * train("-s 2 -t 2 -c 0.0009765625 -g 0.03125 -n 0.05",
-     * featurepath+"\\train-1.0.feature", modelspath+"\\model1.0.model");
-     * train("-s 2 -t 2 -c 0.0009765625 -g 0.0625 -n 0.05",
-     * featurepath+"\\train-2.0.feature", modelspath+"\\model2.0.model");
-     * train("-s 2 -t 2 -c 0.0009765625 -g 0.0078125 -n 0.05",
-     * featurepath+"\\train-3.0.feature", modelspath+"\\model3.0.model");
-     * train("-s 2 -t 2 -c 0.0009765625 -g 0.03125 -n 0.05",
-     * featurepath+"\\train-4.0.feature", modelspath+"\\model4.0.model");
-     * train("-s 2 -t 2 -c 0.0009765625 -g 0.0625 -n 0.05",
+     * public void trainallwithoptparams() { train(
+     * "-s 2 -t 2 -c 0.0009765625 -g 0.03125 -n 0.05",
+     * featurepath+"\\train-1.0.feature", modelspath+"\\model1.0.model"); train(
+     * "-s 2 -t 2 -c 0.0009765625 -g 0.0625 -n 0.05",
+     * featurepath+"\\train-2.0.feature", modelspath+"\\model2.0.model"); train(
+     * "-s 2 -t 2 -c 0.0009765625 -g 0.0078125 -n 0.05",
+     * featurepath+"\\train-3.0.feature", modelspath+"\\model3.0.model"); train(
+     * "-s 2 -t 2 -c 0.0009765625 -g 0.03125 -n 0.05",
+     * featurepath+"\\train-4.0.feature", modelspath+"\\model4.0.model"); train(
+     * "-s 2 -t 2 -c 0.0009765625 -g 0.0625 -n 0.05",
      * featurepath+"\\train-5.0.feature", modelspath+"\\model5.0.model"); }
      */
     public String[] getLabels(String resultpath) {
@@ -114,14 +114,10 @@ public class ImageClassification {
             }
             sourceFile.close();
 
-            return "all:" + Integer.toString(allcount) + 
-                    "\n1:" + Integer.toString(count1) + 
-                    "\n2:" + Integer.toString(count2) + 
-                    "\n3:" + Integer.toString(count3) + 
-                    "\n4:" + Integer.toString(count4) + 
-                    "\n5:" + Integer.toString(count5) + 
-                    "\n6:" + Integer.toString(count6) + 
-                    "\nother:" + Integer.toString(countother);
+            return "all:" + Integer.toString(allcount) + "\n1:" + Integer.toString(count1) + "\n2:"
+                    + Integer.toString(count2) + "\n3:" + Integer.toString(count3) + "\n4:" + Integer.toString(count4)
+                    + "\n5:" + Integer.toString(count5) + "\n6:" + Integer.toString(count6) + "\nother:"
+                    + Integer.toString(countother);
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -241,12 +237,12 @@ public class ImageClassification {
     }
 
     /*
-     * "Usage: svm-scale [options] data_filename\n" +"options:\n"
-     * +"-l lower : x scaling lower limit (default -1)\n"
-     * +"-u upper : x scaling upper limit (default +1)\n"
-     * +"-y y_lower y_upper : y scaling limits (default: no y scaling)\n"
-     * +"-s save_filename : save scaling parameters to save_filename\n"
-     * +"-r restore_filename : restore scaling parameters from restore_filename\n"
+     * "Usage: svm-scale [options] data_filename\n" +"options:\n" +
+     * "-l lower : x scaling lower limit (default -1)\n" +
+     * "-u upper : x scaling upper limit (default +1)\n" +
+     * "-y y_lower y_upper : y scaling limits (default: no y scaling)\n" +
+     * "-s save_filename : save scaling parameters to save_filename\n" +
+     * "-r restore_filename : restore scaling parameters from restore_filename\n"
      * );
      */
     public String scaledata(String sfeaturepath, String dfeaturepath, Boolean saveflag, String paramfilepath) {
@@ -311,7 +307,8 @@ public class ImageClassification {
     }
 
     // ���������Ż�����
-    public String paramoptimize(String trainpath, String modelpath, String predictpath, String resultpath, String[] classes) {
+    public String paramoptimize(String trainpath, String modelpath, String predictpath, String resultpath,
+            String[] classes) {
 
         // float [][]accs=new float[21][21];
         double bestacc = 0, bestc = 0, bestg = 0;
@@ -334,7 +331,8 @@ public class ImageClassification {
             }
 
         // Best C: 8.0 Best G�� 0.015625 Best Acc�� 0.987
-        return "Best C: " + Double.toString(bestc) + " Best G: " + Double.toString(bestg) + " Best Acc: " + Double.toString(bestacc);
+        return "Best C: " + Double.toString(bestc) + " Best G: " + Double.toString(bestg) + " Best Acc: "
+                + Double.toString(bestacc);
     }
 
     // һ��������Ż�����
@@ -359,14 +357,17 @@ public class ImageClassification {
                 }
             }
 
-        return "Best C: " + Double.toString(bestc) + " Best G: " + Double.toString(bestg) + " Best Acc: " + Double.toString(bestacc);
+        return "Best C: " + Double.toString(bestc) + " Best G: " + Double.toString(bestg) + " Best Acc: "
+                + Double.toString(bestacc);
     }
 
     public String classifyOneImg(String imgfeatures, String modelpath, String scaleparamfilepath) {
-        return classifyOneImg(imgfeatures, modelpath, scaleparamfilepath, ".\\tempimage.feature", ".\\tempimage.feature.scale", "\\tempimage.result");
+        return classifyOneImg(imgfeatures, modelpath, scaleparamfilepath, ".\\tempimage.feature",
+                ".\\tempimage.feature.scale", "\\tempimage.result");
     }
 
-    public String classifyOneImg(String imgfeatures, String modelpath, String paramfilepath, String sfeaturepath, String dfeaturepath, String resultpath) {
+    public String classifyOneImg(String imgfeatures, String modelpath, String paramfilepath, String sfeaturepath,
+            String dfeaturepath, String resultpath) {
         String scaledpath = scaleOneImg(imgfeatures, paramfilepath, sfeaturepath, dfeaturepath);
         // String label="0.0";
         predict("-b 0", scaledpath, modelpath, resultpath);
@@ -512,12 +513,11 @@ public class ImageClassification {
          */
         // ic.paramoptimize(trainpath,modelpath,predictpath,resultpath);
         /*
-         * String allstat=ic.dataStat(scalefeaturepath);
-         * System.out.println("All Stat:\n"+allstat); String
-         * trainstat=ic.dataStat(trainpath);
+         * String allstat=ic.dataStat(scalefeaturepath); System.out.println(
+         * "All Stat:\n"+allstat); String trainstat=ic.dataStat(trainpath);
          * System.out.println("Train Stat:\n"+trainstat); String
-         * predictstat=ic.dataStat(predictpath);
-         * System.out.println("Predict Stat:\n"+predictstat);
+         * predictstat=ic.dataStat(predictpath); System.out.println(
+         * "Predict Stat:\n"+predictstat);
          */
 
         // Evaluater eva=new
