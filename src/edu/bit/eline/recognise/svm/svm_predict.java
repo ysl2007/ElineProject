@@ -93,16 +93,16 @@ class svm_predict {
             sumvy += v * target;
             ++total;
         }
-        if (svm_type == svm_parameter.EPSILON_SVR || svm_type == svm_parameter.NU_SVR) {
-            svm_predict.info("Mean squared error = " + error / total + " (regression)\n");
-            svm_predict
-                    .info("Squared correlation coefficient = "
-                            + ((total * sumvy - sumv * sumy) * (total * sumvy - sumv * sumy))
-                                    / ((total * sumvv - sumv * sumv) * (total * sumyy - sumy * sumy))
-                            + " (regression)\n");
-        } else
-            svm_predict.info("Accuracy = " + (double) correct / total * 100 + "% (" + correct + "/" + total
-                    + ") (classification)\n");
+//        if (svm_type == svm_parameter.EPSILON_SVR || svm_type == svm_parameter.NU_SVR) {
+//            svm_predict.info("Mean squared error = " + error / total + " (regression)\n");
+//            svm_predict
+//                    .info("Squared correlation coefficient = "
+//                            + ((total * sumvy - sumv * sumy) * (total * sumvy - sumv * sumy))
+//                                    / ((total * sumvv - sumv * sumv) * (total * sumyy - sumy * sumy))
+//                            + " (regression)\n");
+//        } else
+//            svm_predict.info("Accuracy = " + (double) correct / total * 100 + "% (" + correct + "/" + total
+//                    + ") (classification)\n");
     }
 
     private static void exit_with_help() {

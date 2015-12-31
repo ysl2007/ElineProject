@@ -17,46 +17,44 @@ import edu.bit.eline.recognise.feature.ExtractFeature;
 import edu.bit.eline.recognise.svm.ImageClassification;
 
 public class TrainHelper {
-    public static final int     NOT_INITIALIZED    = -1;
-    public static final int     INITIALIZED        = 0;
-    public static final int     DIRS_READY         = 1;
-    public static final int     FEATURES_EXTRACTED = 2;
-    public static final int     FEATURES_NORMED    = 3;
-    public static final int     DATA_GENERATED     = 4;
-    public static final int     PARAMS_OPTIMIZED   = 5;
-    public static final int     MODEL_TRAINED      = 6;
+    public static final int NOT_INITIALIZED    = -1;
+    public static final int INITIALIZED        = 0;
+    public static final int DIRS_READY         = 1;
+    public static final int FEATURES_EXTRACTED = 2;
+    public static final int FEATURES_NORMED    = 3;
+    public static final int DATA_GENERATED     = 4;
+    public static final int PARAMS_OPTIMIZED   = 5;
+    public static final int MODEL_TRAINED      = 6;
 
-    private final String        configFile         = "./config.json";
-    private String              modelPath;
-    private String              tempPath;
-    private String              featPath;
-    private String              posPath;
-    private String              negPath;
+    private final String configFile = "./config.json";
+    private String       modelPath;
+    private String       tempPath;
+    private String       featPath;
+    private String       posPath;
+    private String       negPath;
 
-    private String              tempoptmodelpath;
-    private String              tempoptresultpath;
-    private String              featurepath;
-    private String              scaleparamspath;
-    private String              scalefeaturepath;
-    private String              trainfeaturepath;
-    private String              predictfeaturepath;
-    private String              finalmodelpath;
+    private String tempoptmodelpath;
+    private String tempoptresultpath;
+    private String featurepath;
+    private String scaleparamspath;
+    private String scalefeaturepath;
+    private String trainfeaturepath;
+    private String predictfeaturepath;
+    private String finalmodelpath;
 
     private ExtractFeature      ef;
     private ImageClassification ic;
     private double              c;
     private double              g;
-    private String[]            classes            = { "0.0", "0.0" };
-    private int                 status             = -1;
+    private String[]            classes = { "0.0", "0.0" };
+    private int                 status  = -1;
 
-    public TrainHelper(String lineName, String posClass, String posPath,
-            String negPath) {
+    public TrainHelper(String lineName, String posClass, String posPath, String negPath) {
         JSONTokener tokener;
         try {
             tokener = new JSONTokener(new FileReader(configFile));
         } catch (FileNotFoundException e) {
-            JOptionPane.showMessageDialog(null, "找不到配置文件。", "错误",
-                    JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(null, "找不到配置文件。", "错误", JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
             return;
         }
@@ -65,8 +63,7 @@ public class TrainHelper {
         try {
             rootPath = jo.getString("config_root_path");
         } catch (JSONException e) {
-            JOptionPane.showMessageDialog(null, "配置文件不完整。", "错误",
-                    JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(null, "配置文件不完整。", "错误", JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
             return;
         }
@@ -110,13 +107,19 @@ public class TrainHelper {
     }
 
     public void featureExtract(JProgressBar proBar) {
-        ef = new ExtractFeature(posPath, negPath, featurepath, classes[1],
-                proBar);
+        ef = new ExtractFeature(posPath, negPath, featurepath, classes[1], proBar);
+        ef.setCallback(this);
         new Thread(ef).start();
     }
 
     public void stopThread() {
         ef.setRunFlag(false);
+    }
+
+    public void featExtrCallback(int status, JProgressBar proBar) {
+        this.status = status;
+        JOptionPane.showMessageDialog(null, "特征提取过程完成！", "成功", JOptionPane.INFORMATION_MESSAGE);
+        proBar.setValue(0);
     }
 
     public void featureNorm() {
@@ -125,14 +128,13 @@ public class TrainHelper {
     }
 
     public void generateTrainPredict() {
-        ic.generateTrainPredict(scalefeaturepath, 50, trainfeaturepath,
-                predictfeaturepath);
+        ic.generateTrainPredict(scalefeaturepath, 50, trainfeaturepath, predictfeaturepath);
         status = 4;
     }
 
     public void optiParams() {
-        String result = ic.paramoptimize(trainfeaturepath, tempoptmodelpath,
-                predictfeaturepath, tempoptresultpath, classes);
+        String result = ic.paramoptimize(trainfeaturepath, tempoptmodelpath, predictfeaturepath, tempoptresultpath,
+                classes);
         int idx1 = result.indexOf(':') + 2;
         int idx2 = result.indexOf(' ', idx1);
         c = Double.valueOf(result.substring(idx1, idx2));

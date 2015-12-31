@@ -13,6 +13,7 @@ import java.util.List;
 import javax.imageio.ImageIO;
 import javax.swing.JProgressBar;
 
+import edu.bit.eline.system.TrainHelper;
 import net.semanticmetadata.lire.imageanalysis.AutoColorCorrelogram;
 import net.semanticmetadata.lire.imageanalysis.CEDD;
 import net.semanticmetadata.lire.imageanalysis.ColorLayout;
@@ -26,7 +27,8 @@ public class ExtractFeature implements Runnable {
     private String       negPath;
     private String       featurefilepath;
     private String       pos;
-    private boolean      goOn = true;
+    private boolean      runFlag = true;
+    private TrainHelper  th;
     private JProgressBar proBar;
 
     public ExtractFeature() {}
@@ -39,66 +41,8 @@ public class ExtractFeature implements Runnable {
         this.proBar = proBar;
     }
 
-    public void generateSubImg(String sourcefoldpath, String destfoldpath) {
-        String[] filelist = getTextFileList(sourcefoldpath);
-        for (int i = 0; i < filelist.length; i++) {
-            AnnotationAnalysis aa = new AnnotationAnalysis(filelist[i]);
-            String rect = aa.getRect();
-            String lefttop = rect.substring(0, rect.indexOf(";"));
-            String rightlow = rect.substring(rect.indexOf(";") + 1, rect.length());
-            int lefttopx = Integer.parseInt(lefttop.substring(0, lefttop.indexOf(",")));
-            int lefttopy = Integer.parseInt(lefttop.substring(lefttop.indexOf(",") + 1, lefttop.length()));
-            int rightlowx = Integer.parseInt(rightlow.substring(0, rightlow.indexOf(",")));
-            int rightlowy = Integer.parseInt(rightlow.substring(rightlow.indexOf(",") + 1, rightlow.length()));
-
-            if (lefttopx == rightlowx || lefttopy == rightlowy) {
-                ;
-            } else {
-                try {
-                    File imgfile = new File(aa.getfilepath() + "/" + aa.getfileName());
-                    BufferedImage bi = ImageIO.read(imgfile);
-                    BufferedImage subimg = null;
-                    subimg = bi.getSubimage(lefttopx, lefttopy, rightlowx - lefttopx, rightlowy - lefttopy);
-                    ImageIO.write(subimg, "BMP", new File(
-                            destfoldpath + "/" + aa.getobjType().trim() + "/" + aa.getfileName() + ".sub.bmp"));
-
-                } catch (IOException e) {
-                    e.printStackTrace();
-
-                } catch (RasterFormatException e) {
-                    e.printStackTrace();
-
-                } catch (NullPointerException e) {
-                    e.printStackTrace();
-
-                }
-            }
-        }
-    }
-
-    public String[] getTextFileList(String foldpath) {
-        File rootDir = new File(foldpath);
-        String[] subDirs = rootDir.list();
-        List<String> list = new ArrayList<String>();
-        for (int i = 0; i < subDirs.length; ++i) {
-            String subdir = new String(rootDir.getAbsolutePath() + "\\" + subDirs[i] + "\\");
-            File dir = new File(subdir);
-
-            File[] imgs = dir.listFiles(new FilenameFilter() {
-                public boolean accept(File dir, String name) {
-                    return name.toLowerCase().endsWith("txt");
-                }
-            });
-            for (int j = 0; j < imgs.length; j++) {
-                list.add(imgs[j].getAbsolutePath());
-            }
-        }
-
-        String strings[] = new String[list.size()];
-        for (int i = 0, j = list.size(); i < j; i++) {
-            strings[i] = list.get(i);
-        }
-        return strings;
+    public void setCallback(TrainHelper th) {
+        this.th = th;
     }
 
     public String[] getImgFilelist(String foldpath) {
@@ -235,7 +179,7 @@ public class ExtractFeature implements Runnable {
             int curImg = 0;
             proBar.setMaximum(imgNums);
             if (posImageList.length > 0) {
-                for (int j = 0; j < posImageList.length && goOn; j++) {
+                for (int j = 0; j < posImageList.length && runFlag; j++) {
                     String features = extractIMGfeature(posImageList[j]);
                     String featurestr = posClass + " " + features;
                     outFile.write(featurestr + "\n");
@@ -245,7 +189,7 @@ public class ExtractFeature implements Runnable {
                 }
             }
             if (negImageList.length > 0) {
-                for (int j = 0; j < negImageList.length && goOn; j++) {
+                for (int j = 0; j < negImageList.length && runFlag; j++) {
                     String features = extractIMGfeature(negImageList[j]);
                     String featurestr = "0 " + features;
                     outFile.write(featurestr + "\n");
@@ -267,10 +211,26 @@ public class ExtractFeature implements Runnable {
 
     @Override
     public void run() {
+        if (th == null) {
+            return;
+        }
+        BufferedWriter outFile = null;
+        try {
+            outFile = new BufferedWriter(new FileWriter(featurefilepath));
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
+        }
         extractFoldfeature();
+        try {
+            outFile.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        th.featExtrCallback(TrainHelper.FEATURES_EXTRACTED, proBar);
     }
 
     public void setRunFlag(boolean status) {
-        goOn = status;
+        runFlag = status;
     }
 }

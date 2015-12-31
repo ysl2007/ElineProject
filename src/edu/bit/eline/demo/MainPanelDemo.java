@@ -4,10 +4,15 @@ import java.awt.BorderLayout;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -41,23 +46,26 @@ import edu.bit.eline.recognise.svm.ImageClassification;
 public class MainPanelDemo extends JFrame {
     private static final long serialVersionUID = -8054742885149944542L;
 
-    private Detection         detection;
-    private Params            param;
+    private Detection detection;
+    private Params    param;
 
-    private JPanel            topLeft;
-    private JPanel            topRight;
-    private JPanel            topPanel;
-    private JButton           browseImg;
-    private JButton           browseModel;
-    private JButton           run;
-    private Container         container;
-    private ImagePanel        imagePanel;
-    private JTextField        dirField;
-    private JTextField        modelField;
-    private JTextField        varThrsh;
-    private JTextField        minArea;
-    private JTextField        alpha;
-    private JScrollPane       centerPanel;
+    private JPanel      topLeft;
+    private JPanel      topRight;
+    private JPanel      topPanel;
+    private JPanel      statusBar;
+    private JLabel      fileName;
+    private JLabel      numOfPics;
+    private JButton     browseImg;
+    private JButton     browseModel;
+    private JButton     run;
+    private Container   container;
+    private ImagePanel  imagePanel;
+    private JTextField  dirField;
+    private JTextField  modelField;
+    private JTextField  varThrsh;
+    private JTextField  minArea;
+    private JTextField  alpha;
+    private JScrollPane centerPanel;
 
     private class Detection implements Runnable {
         private Detector            detector;
@@ -84,46 +92,57 @@ public class MainPanelDemo extends JFrame {
             }
             int i = 0;
             for (String imgFilename : param.imgList) {
+                ++i;
+                fileName.setText(imgFilename);
+                numOfPics.setText(i + "/" + param.imgList.size());
                 BufferedImage bimg;
                 try {
                     bimg = ImageIO.read(new File(imgFilename));
                 } catch (IOException e) {
                     e.printStackTrace();
-                    System.err.println("Failed to open image file: "
-                            + imgFilename);
+                    System.err.println("Failed to open image file: " + imgFilename);
                     continue;
                 }
                 if (bimg == null)
                     continue;
-                System.out.println(++i);
                 Mat imgMat = converter.convert2Mat(bimg);
                 IplImage mask = detector.detect(imgMat, param.alphaVal, true);
-                List<Blob> blobList;
-                blobList = analyzer.analyze(mask);
+                List<Blob> blobList = analyzer.analyze(mask);
                 Color color = new Color(255, 0, 0);
                 for (Blob blob : blobList) {
                     CvRect rect = blob.getRect();
-                    BufferedImage subimg = bimg.getSubimage(rect.x(), rect.y(),
-                            rect.width(), rect.height());
+                    BufferedImage subimg = bimg.getSubimage(rect.x(), rect.y(), rect.width(), rect.height());
                     String feature = ef.extractIMGfeature(subimg);
-                    String label = ic.classifyOneImg("4 " + feature,
-                            param.finalModelPath, param.scaleParamPath,
-                            param.tempimgfeaturepath,
-                            param.tempscaleimgfeaturepath,
-                            param.tempimageresultpath);
-                    if (!label.equals("0.0"))
+                    String label = ic.classifyOneImg("4 " + feature, param.finalModelPath, param.scaleParamPath,
+                            param.tempimgfeaturepath, param.tempscaleimgfeaturepath, param.tempimageresultpath);
+                    if (!label.equals("0.0")) {
                         imgMat = blob.drawRect(imgMat, color);
+                        int topx = rect.x(), topy = rect.y();
+                        int botx = topx + rect.width(), boty = topy + rect.height();
+                        String str = imgFilename + ": " + topx + ", " + topy + ", " + botx + ", " + boty + "\n";
+                        try {
+                            param.out.write(str);
+                        } catch (IOException e) {
+                            System.out.println("写入文件出现问题。");
+                            e.printStackTrace();
+                        }
+                    }
                 }
                 BufferedImage imgProcessed = converter.convert2JavaImg(imgMat);
                 imagePanel.setImage(imgProcessed);
                 centerPanel.setViewportView(imagePanel);
-                imagePanel.setPreferredSize(new Dimension(imgProcessed
-                        .getWidth(), imgProcessed.getHeight()));
+                imagePanel.setPreferredSize(new Dimension(imgProcessed.getWidth(), imgProcessed.getHeight()));
                 try {
                     Thread.sleep(500);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
+            }
+            try {
+                param.out.flush();
+                param.out.close();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
     }
@@ -223,15 +242,41 @@ public class MainPanelDemo extends JFrame {
         imagePanel = new ImagePanel();
         centerPanel = new JScrollPane();
         centerPanel.add(imagePanel);
-        centerPanel
-                .setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-        centerPanel
-                .setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        centerPanel.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        centerPanel.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        
+        // 状态栏
+        fileName = new JLabel();
+        fileName.setAlignmentX(JLabel.LEFT_ALIGNMENT);
+        numOfPics = new JLabel();
+        numOfPics.setAlignmentX(JLabel.LEFT_ALIGNMENT);
+        statusBar = new JPanel();
+        statusBar.setPreferredSize(new Dimension(100, 23));
+        statusBar.add(fileName);
+        statusBar.add(numOfPics);
+        GridBagLayout gd = new GridBagLayout();
+        GridBagConstraints gdCon = new GridBagConstraints();
+        gdCon.fill = GridBagConstraints.BOTH;
+        gdCon.anchor = GridBagConstraints.WEST;
+        gdCon.gridx = 0;
+        gdCon.gridy = 0;
+        gdCon.gridheight = 1;
+        gdCon.gridwidth = 2;
+        gdCon.insets = new Insets(0, 0, 0, 40);
+        gd.setConstraints(fileName, gdCon);
+        gdCon.gridx = 2;
+        gdCon.gridy = 0;
+        gdCon.gridheight = 1;
+        gdCon.gridwidth = 1;
+        gdCon.insets = new Insets(0, 40, 0, 0);
+        gd.setConstraints(numOfPics, gdCon);
+        statusBar.setLayout(gd);
 
         // 整个下部
         container.setLayout(new BorderLayout());
         container.add(topPanel, BorderLayout.NORTH);
         container.add(centerPanel, BorderLayout.CENTER);
+        container.add(statusBar, BorderLayout.SOUTH);
 
         finalSettings();
     }
@@ -254,10 +299,7 @@ public class MainPanelDemo extends JFrame {
         File[] imgInDir = directory.listFiles(new FilenameFilter() {
             @Override
             public boolean accept(File arg0, String arg1) {
-                arg1 = arg1.toLowerCase();
-                if (arg1.endsWith("jpg"))
-                    return true;
-                return false;
+                return arg1.toLowerCase().endsWith("jpg");
             }
         });
         if (null == imgInDir) {
@@ -288,10 +330,16 @@ public class MainPanelDemo extends JFrame {
             param.varThrshVal = Float.parseFloat(varThrsh.getText());
             param.minAreaVal = Integer.parseInt(minArea.getText());
             param.alphaVal = Double.parseDouble(alpha.getText());
+            String imgDir = dirField.getText();
+            String outFileName = "." + imgDir.substring(imgDir.lastIndexOf("\\"));
+            param.out = new BufferedWriter(new FileWriter(new File(outFileName)));
         } catch (NumberFormatException e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(null, "参数输入错误。");
             return false;
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(null, "输出文件创建失败。");
+            e.printStackTrace();
         }
         param.imgList = getImgList();
         if (!param.checkParams()) {

@@ -73,54 +73,6 @@ public class DryRun {
         }
     }
 
-    // protected CvRect getTag(String imgName) throws IOException {
-    // BufferedReader br = new BufferedReader(new FileReader(new File(imgName +
-    // ".txt")));
-    // String line;
-    // while ((line = br.readLine()) != null) {
-    // if (line.startsWith("LeftTop"))
-    // break;
-    // }
-    // String _x = line.substring(line.indexOf("(") + 1, line.indexOf(","));
-    // String _y = line.substring(line.indexOf(",") + 1, line.indexOf(")"));
-    // line = br.readLine();
-    // String _m = line.substring(line.indexOf("(") + 1, line.indexOf(","));
-    // String _n = line.substring(line.indexOf(",") + 1, line.indexOf(")"));
-    // int x = Integer.parseInt(_x);
-    // int y = Integer.parseInt(_y);
-    // int w = Integer.parseInt(_m) - x;
-    // int h = Integer.parseInt(_n) - y;
-    // Rect rect = new Rect(x, y, w, h);
-    // br.close();
-    // return rect.asCvRect();
-    // }
-    //
-    // protected boolean include(CvRect tag, CvRect rect) {
-    // int tagx1 = tag.x();
-    // int tagy1 = tag.y();
-    // int tagx2 = tagx1 + tag.width();
-    // int tagy2 = tagy1 + tag.height();
-    //
-    // int rctx1 = rect.x();
-    // int rcty1 = rect.y();
-    // int rctx2 = rctx1 + rect.width();
-    // int rcty2 = rcty1 + rect.height();
-    //
-    // if (rctx1 >= tagx1 && rctx1 <= tagx2) {
-    // if ((rcty1 >= tagy1 && rcty1 <= tagy2) || (rcty2 >= tagy1 && rcty2 <=
-    // tagy2)) {
-    // return false;
-    // }
-    // }
-    // if (rctx2 >= tagx1 && rctx2 <= tagx2) {
-    // if ((rcty1 >= tagy1 && rcty1 <= tagy2) || (rcty2 >= tagy1 && rcty2 <=
-    // tagy2)) {
-    // return false;
-    // }
-    // }
-    // return true;
-    // }
-
     protected static boolean sizeLimit(CvRect rect) {
         int height = rect.height();
         int width = rect.width();
@@ -135,8 +87,8 @@ public class DryRun {
     }
 
     public static void main(String[] args) {
-        String path = "E:\\train\\";
-        String dest = "E:\\negative3\\";
+        String path = "E:\\testLines\\八宝一二5(动态风险)\\2014-08-17八宝一二5(动态风险)";
+        String dest = "E:\\testLines\\八宝一二5(动态风险)\\sample";
         run(path, dest);
     }
 }
