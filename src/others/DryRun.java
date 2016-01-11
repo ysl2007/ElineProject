@@ -22,6 +22,10 @@ public class DryRun {
     public static void run(String path, String dest) {
         path += '/';
         dest += '/';
+        File d = new File(dest);
+        if (!d.exists()){
+            d.mkdirs();
+        }
 
         int subimgCount = 0;
         String[] imgList = DirProcesser.getFilenames(path, "jpg");
@@ -87,8 +91,8 @@ public class DryRun {
     }
 
     public static void main(String[] args) {
-        String path = "E:\\testLines\\八宝一二5(动态风险)\\2014-08-17八宝一二5(动态风险)";
-        String dest = "E:\\testLines\\八宝一二5(动态风险)\\sample";
+        String path = "E:\\testLines\\北胡11(动态风险)\\2013-11-30北胡11(动态风险)";
+        String dest = "E:\\testLines\\北胡11(动态风险)\\sample";
         run(path, dest);
     }
 }

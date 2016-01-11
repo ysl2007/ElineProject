@@ -47,9 +47,7 @@ public class Train extends JFrame {
     private JPanel            buttonPanel;
     private JPanel            actionPanel;
     private JButton           getReady;
-    private JButton           generData;
     private JButton           featExtract;
-    private JButton           featNorm;
     private JButton           paramOpti;
     private JButton           train;
     private JButton           positiveDirBrowse;
@@ -256,24 +254,6 @@ public class Train extends JFrame {
             }
         });
 
-        featNorm = new JButton("特征归一化");
-        featNorm.setAlignmentX(CENTER_ALIGNMENT);
-        featNorm.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                featureNorm();
-            }
-        });
-
-        generData = new JButton("准备数据");
-        generData.setAlignmentX(CENTER_ALIGNMENT);
-        generData.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                generateData();
-            }
-        });
-
         paramOpti = new JButton("参数优化");
         paramOpti.setAlignmentX(CENTER_ALIGNMENT);
         paramOpti.addActionListener(new ActionListener() {
@@ -309,10 +289,6 @@ public class Train extends JFrame {
         actionPanel.add(getReady);
         actionPanel.add(Box.createVerticalStrut(20));
         actionPanel.add(featExtract);
-        actionPanel.add(Box.createVerticalStrut(20));
-        actionPanel.add(featNorm);
-        actionPanel.add(Box.createVerticalStrut(20));
-        actionPanel.add(generData);
         actionPanel.add(Box.createVerticalStrut(20));
         actionPanel.add(paramOpti);
         actionPanel.add(Box.createVerticalStrut(20));
@@ -385,39 +361,13 @@ public class Train extends JFrame {
         }
     }
 
-    private void featureNorm() {
+    private void optiParams() {
         if (validateStatus(TrainHelper.FEATURES_EXTRACTED) == -1) {
             JOptionPane.showMessageDialog(null, "前一步骤尚未完成！", "错误",
                     JOptionPane.ERROR_MESSAGE);
             return;
         }
-        tHelper.featureNorm();
-        if (validateStatus(TrainHelper.FEATURES_NORMED) == 0) {
-            JOptionPane.showMessageDialog(null, "特征归一化完成！", "成功",
-                    JOptionPane.INFORMATION_MESSAGE);
-        }
-    }
-
-    private void generateData() {
-        if (validateStatus(TrainHelper.FEATURES_NORMED) == -1) {
-            JOptionPane.showMessageDialog(null, "前一步骤尚未完成！", "错误",
-                    JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-        tHelper.generateTrainPredict();
-        if (validateStatus(TrainHelper.DATA_GENERATED) == 0) {
-            JOptionPane.showMessageDialog(null, "训练数据准备完成！", "成功",
-                    JOptionPane.INFORMATION_MESSAGE);
-        }
-    }
-
-    private void optiParams() {
-        if (validateStatus(TrainHelper.DATA_GENERATED) == -1) {
-            JOptionPane.showMessageDialog(null, "前一步骤尚未完成！", "错误",
-                    JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-        tHelper.optiParams();
+        tHelper.optiParams(progressBar);
         if (validateStatus(TrainHelper.PARAMS_OPTIMIZED) == 0) {
             JOptionPane.showMessageDialog(null, "参数优化完成！", "成功",
                     JOptionPane.INFORMATION_MESSAGE);
@@ -430,7 +380,6 @@ public class Train extends JFrame {
                     JOptionPane.ERROR_MESSAGE);
             return;
         }
-        System.out.println(var);
         String varVal = var.getText();
         String alphVal = alpha.getText();
         String areaVal = minArea.getText();

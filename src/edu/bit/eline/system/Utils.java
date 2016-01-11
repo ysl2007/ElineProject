@@ -3,7 +3,7 @@ package edu.bit.eline.system;
 import java.io.File;
 
 public class Utils {
-    public static boolean delete(File file){
+    public static boolean delete(File file) {
         if (!file.exists()) {
             return false;
         }

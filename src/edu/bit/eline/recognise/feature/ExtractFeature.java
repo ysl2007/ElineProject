@@ -1,7 +1,6 @@
 package edu.bit.eline.recognise.feature;
 
 import java.awt.image.BufferedImage;
-import java.awt.image.RasterFormatException;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
