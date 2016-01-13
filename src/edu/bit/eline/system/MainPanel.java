@@ -8,10 +8,12 @@ import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -283,12 +285,25 @@ public class MainPanel extends JFrame {
         } catch (Exception e) {
             return false;
         }
+        BufferedWriter bw = null;
+        try {
+            bw = new BufferedWriter(new FileWriter(new File(configPath + "deviceTree.json")));
+            bw.write(jsonTree);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                bw.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
         return true;
     }
 
     private boolean getCameraTreeFromFile() {
         try (BufferedReader br = new BufferedReader(
-                new InputStreamReader(new FileInputStream("./deviceTree.json"), "utf-8"))) {
+                new InputStreamReader(new FileInputStream(configPath + "deviceTree.json"), "utf-8"))) {
             String jsonTree = br.readLine();
             DefaultTreeModel dt = parseJsonTree(jsonTree);
             treePanel.setModel(dt);

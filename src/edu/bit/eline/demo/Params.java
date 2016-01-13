@@ -1,18 +1,20 @@
 package edu.bit.eline.demo;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.util.List;
 
 public class Params {
-    public float  varThrshVal = -1;
-    public int    minAreaVal  = -1;
-    public double alphaVal    = -1;
-    public String scaleParamPath;
-    public String finalModelPath;
-    public String tempimgfeaturepath;
-    public String tempscaleimgfeaturepath;
-    public String tempimageresultpath;
-    public List<String> imgList;
+    public float          varThrshVal = -1;
+    public int            minAreaVal  = -1;
+    public double         alphaVal    = -1;
+    public String         scaleParamPath;
+    public String         finalModelPath;
+    public String         tempimgfeaturepath;
+    public String         tempscaleimgfeaturepath;
+    public String         tempimageresultpath;
+    public List<String>   imgList;
+    public BufferedWriter out;
 
     public Params(String rootPath) {
         rootPath += "/";
@@ -32,10 +34,13 @@ public class Params {
     public boolean checkParams() {
         if (!new File(scaleParamPath).exists())
             return false;
-        if (! new File(finalModelPath).exists())
+        if (!new File(finalModelPath).exists())
             return false;
         if (varThrshVal < 0 || alphaVal <= 0)
             return false;
+        if (out == null){
+            return false;
+        }
         return true;
     }
 }
