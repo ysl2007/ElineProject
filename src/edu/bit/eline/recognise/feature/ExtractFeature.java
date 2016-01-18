@@ -201,7 +201,7 @@ public class ExtractFeature implements Runnable {
                         if (increase) {
                             proBar.setValue((int) ((float) curNum / total * 80));
                         } else {
-                            proBar.setValue((int) ((float) curNum / total * 90));
+                            proBar.setValue((int) ((float) curNum / total * 100));
                         }
                     }
                 }

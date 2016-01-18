@@ -358,9 +358,6 @@ public class Train extends JFrame {
             return;
         }
         tHelper.optiParams(progressBar);
-        if (validateStatus(TrainHelper.PARAMS_OPTIMIZED) == 0) {
-            JOptionPane.showMessageDialog(null, "参数优化完成！", "成功", JOptionPane.INFORMATION_MESSAGE);
-        }
     }
 
     private void train() {
@@ -368,7 +365,6 @@ public class Train extends JFrame {
             JOptionPane.showMessageDialog(null, "前一步骤尚未完成！", "错误", JOptionPane.ERROR_MESSAGE);
             return;
         }
-        System.out.println(var);
         String varVal = var.getText();
         String alphVal = alpha.getText();
         String areaVal = minArea.getText();
@@ -397,9 +393,9 @@ public class Train extends JFrame {
             if (status == JOptionPane.YES_OPTION) {
                 tHelper.stopThread();
                 Utils.delete(new File(rootPath + "/models/" + name.getText()));
+                super.dispose();
             }
         } else {}
-        super.dispose();
     }
 
     private int validateStatus(int status) {

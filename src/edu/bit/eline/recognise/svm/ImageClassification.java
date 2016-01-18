@@ -92,49 +92,6 @@ public class ImageClassification implements Runnable {
         }
     }
 
-    public String paramoptimize() {
-        double bestCcandi = 0, bestGcandi = 0;
-//        double bestrec = 0;
-        double bestacc = 0, bestc = 0, bestg = 0;
-        int stage = 0;
-        for (int i = -2; i <= 2; i++) {
-            for (int j = -10; j <= 10; j++) {
-                if (!runFlag) {
-                    return null;
-                }
-                System.out.println("opti: i=" + i + " j=" + j);
-                double c = Math.pow(2, i);
-                double g = Math.pow(2, j);
-                String option = "-t 2 " + "-c " + Double.toString(c) + " -g " + Double.toString(g);
-                train(option, trainpath, modelpath);
-                predict("-b 0", predictpath, modelpath, resultpath);
-                Evaluater eva = new Evaluater(classes, getLabels(resultpath), getLabels(predictpath));
-                double acc = eva.getAccuracy();
-                if (acc > bestacc){
-                    bestc = c;
-                    bestg = g;
-                }
-//                double rec = eva.getRecall();
-//                if (acc >= bestacc && rec >= bestrec){
-//                    bestCcandi = c;
-//                    bestGcandi = g;
-//                }
-//                if (acc > 0.5 && rec > bestrec) {
-//                    bestacc = acc;
-//                    bestrec = rec;
-//                    bestc = c;
-//                    bestg = g;
-//                }
-                ++stage;
-                proBar.setValue((int) ((float) stage / 105 * 100));
-            }
-        }
-        bestc = bestc == 0 ? bestCcandi : bestc;
-        bestg = bestg == 0 ? bestGcandi : bestg;
-        return "Best C: " + Double.toString(bestc) + " Best G: " + Double.toString(bestg) + " Best Acc: "
-                + Double.toString(bestacc);
-    }
-
     public String classifyOneImg(String imgfeatures, String modelpath, String paramfilepath, String sfeaturepath,
             String dfeaturepath, String resultpath) {
         String scaledpath = scaleOneImg(imgfeatures, paramfilepath, sfeaturepath, dfeaturepath);
@@ -174,6 +131,50 @@ public class ImageClassification implements Runnable {
     }
 
     // private methods
+    private String paramoptimize() {
+        proBar.setMaximum(100);
+        double bestCcandi = 0, bestGcandi = 0;
+        // double bestrec = 0;
+        double bestacc = 0, bestc = 0, bestg = 0;
+        int stage = 0;
+        for (int i = -2; i <= 2; i++) {
+            for (int j = -10; j <= 10; j++) {
+                if (!runFlag) {
+                    return null;
+                }
+                System.out.println("opti: i=" + i + " j=" + j);
+                double c = Math.pow(2, i);
+                double g = Math.pow(2, j);
+                String option = "-t 2 " + "-c " + Double.toString(c) + " -g " + Double.toString(g);
+                train(option, trainpath, modelpath);
+                predict("-b 0", predictpath, modelpath, resultpath);
+                Evaluater eva = new Evaluater(classes, getLabels(resultpath), getLabels(predictpath));
+                double acc = eva.getAccuracy();
+                if (acc > bestacc) {
+                    bestc = c;
+                    bestg = g;
+                }
+                // double rec = eva.getRecall();
+                // if (acc >= bestacc && rec >= bestrec){
+                // bestCcandi = c;
+                // bestGcandi = g;
+                // }
+                // if (acc > 0.5 && rec > bestrec) {
+                // bestacc = acc;
+                // bestrec = rec;
+                // bestc = c;
+                // bestg = g;
+                // }
+                ++stage;
+                proBar.setValue((int) ((float) stage / 105 * 100));
+            }
+        }
+        bestc = bestc == 0 ? bestCcandi : bestc;
+        bestg = bestg == 0 ? bestGcandi : bestg;
+        return "Best C: " + Double.toString(bestc) + " Best G: " + Double.toString(bestg) + " Best Acc: "
+                + Double.toString(bestacc);
+    }
+
     private String[] getLabels(String resultpath) {
         try {
             BufferedReader sourceFile = new BufferedReader(new FileReader(resultpath));
