@@ -145,8 +145,12 @@ public class TrainHelper {
     }
 
     public void stopThread() {
-        ef.setRunFlag(false);
-        ic.setRunFlag(false);
+        if (ef != null) {
+            ef.setRunFlag(false);
+        }
+        if (ic != null) {
+            ic.setRunFlag(false);
+        }
     }
 
     public void featExtrCallback(int status, JProgressBar proBar) {

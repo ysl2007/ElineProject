@@ -394,8 +394,12 @@ public class Train extends JFrame {
                 tHelper.stopThread();
                 Utils.delete(new File(rootPath + "/models/" + name.getText()));
                 super.dispose();
+            } else{
+                return;
             }
-        } else {}
+        } else {
+            super.dispose();
+        }
     }
 
     private int validateStatus(int status) {
