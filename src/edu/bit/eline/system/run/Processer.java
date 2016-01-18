@@ -152,11 +152,20 @@ public class Processer implements Runnable {
                         e.printStackTrace();
                         continue;
                     }
+                    String riskType = null;
+                    switch (label) {
+                        case "1.0":
+                            riskType = "杆塔设备";
+                            break;
+                        case "2.0":
+                            riskType = "地面设备";
+                            break;
+                    }
                     ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
                     String sql = "INSERT INTO Table_AlarmInfo(ImageId, FileNames, FileContent, ImageTime, DetectTime, LineName, CameraName, RiskType, LabelType)"
                             + " VALUES ('" + imgFilename + "','" + imgFilename + "'," + "?" + ","
                             + "CONVERT(datetime, '" + datetime + "', 20)" + "," + "getdate()" + ",'" + lineName + "','"
-                            + lineName + "','" + label + "','" + "Auto" + "')";
+                            + lineName + "','" + riskType + "','" + "自动" + "')";
                     boolean status = dbconn.insert(sql, bais);
                     if (status == true) {
                         break;
