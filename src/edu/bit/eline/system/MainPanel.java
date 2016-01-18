@@ -101,9 +101,9 @@ public class MainPanel extends JFrame {
         configPath = jo.getString("config_root_path");
         configPath += "/";
 
-        setupGUI();
         storage = new ImageStorage();
         processer = new Processer(storage);
+        setupGUI();
         imgProvider = new ImageProvider(storage, processer);
 
         new Thread(imgProvider).start();
@@ -191,7 +191,6 @@ public class MainPanel extends JFrame {
                 DefaultMutableTreeNode tree = (DefaultMutableTreeNode) treePanel.getModel().getRoot();
                 List<String> cameraList = getAllLeaf(tree);
                 new ModelManager(cameraList);
-
             }
         });
 

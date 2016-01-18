@@ -25,6 +25,7 @@ public class TrainHelper {
     public static final int MODEL_TRAINED      = 4;
 
     private final String configFile = "./config.json";
+    private String       lineName;
     private String       modelPath;
     private String       tempPath;
     private String       featPath;
@@ -83,7 +84,8 @@ public class TrainHelper {
         finalmodelpath = modelPath + "final.model";
 
         ic = new ImageClassification();
-        classes[1] = posClass;
+        this.lineName = lineName;
+        this.classes[1] = posClass;
         this.posPath = posPath;
         this.negPath = negPath;
         status = INITIALIZED;
@@ -107,14 +109,15 @@ public class TrainHelper {
         status = DIRS_READY;
     }
 
-    public void featureExtract(JProgressBar proBar) {
+    public void featureExtract(JProgressBar proBar, boolean increaseTrain) {
         if (featExtThread == null || featExtThread.isAlive() == false) {
-            ef = new ExtractFeature(posPath, negPath, featurepath, classes[1], proBar);
+            ef = new ExtractFeature(lineName, classes[1], proBar, increaseTrain);
+            ef.setFolders(posPath, negPath, featurepath);
             ef.setCallback(this);
             featExtThread = new Thread(ef);
             featExtThread.start();
         } else {
-            JOptionPane.showMessageDialog(null, "参数优化正在运行，请勿重复点击。", "正在运行", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(null, "特征提取正在运行，请勿重复点击。", "正在运行", JOptionPane.INFORMATION_MESSAGE);
         }
     }
 
@@ -146,11 +149,6 @@ public class TrainHelper {
         proBar.setValue(0);
     }
 
-    public void stopThread() {
-        ef.setRunFlag(false);
-        ic.setRunFlag(false);
-    }
-
     public void optiCallBack(String result, int status, JProgressBar proBar) {
         this.optiResult = result;
         this.status = status;
@@ -162,5 +160,10 @@ public class TrainHelper {
         g = Double.valueOf(optiResult.substring(idx1, idx2));
         JOptionPane.showMessageDialog(null, "参数优化完成！", "成功", JOptionPane.INFORMATION_MESSAGE);
         proBar.setValue(0);
+    }
+
+    public void stopThread() {
+        ef.setRunFlag(false);
+        ic.setRunFlag(false);
     }
 }

@@ -1,0 +1,32 @@
+﻿Merge branch 'singleClass' of https://github.com/ysl2007/ElineProject into singleClass
+
+# Please enter the commit message for your changes. Lines starting
+# with '#' will be ignored, and an empty message aborts the commit.
+#
+# Date:      Mon Jan 18 15:20:48 2016 +0800
+#
+# On branch singleClass
+# Your branch and 'origin/singleClass' have diverged,
+# and have 1 and 1 different commit each, respectively.
+#   (use "git pull" to merge the remote branch into yours)
+#
+# Changes to be committed:
+#	modified:   bin/edu/bit/eline/system/MainPanel$6.class
+#	modified:   bin/edu/bit/eline/system/MainPanel$7.class
+#	modified:   bin/edu/bit/eline/system/MainPanel.class
+#	modified:   bin/edu/bit/eline/system/Train$1.class
+#	modified:   bin/edu/bit/eline/system/Train$2.class
+#	modified:   bin/edu/bit/eline/system/Train$3.class
+#	modified:   bin/edu/bit/eline/system/Train$4.class
+#	modified:   bin/edu/bit/eline/system/Train$5.class
+#	modified:   bin/edu/bit/eline/system/Train$6.class
+#	modified:   bin/edu/bit/eline/system/Train$7.class
+#	modified:   bin/edu/bit/eline/system/Train$CheckListener.class
+#	modified:   bin/edu/bit/eline/system/Train.class
+#	modified:   bin/edu/bit/eline/system/TrainHelper.class
+#	modified:   src/edu/bit/eline/recognise/svm/svm_scale.java
+#	modified:   src/edu/bit/eline/system/MainPanel.java
+#	modified:   src/edu/bit/eline/system/Train.java
+#	modified:   src/edu/bit/eline/system/TrainHelper.java
+#
+

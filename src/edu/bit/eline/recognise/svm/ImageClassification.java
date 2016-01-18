@@ -166,7 +166,6 @@ public class ImageClassification implements Runnable {
                 // bestg = g;
                 // }
                 ++stage;
-                System.out.println((int) ((float) stage / 105 * 100));
                 proBar.setValue((int) ((float) stage / 105 * 100));
             }
         }
