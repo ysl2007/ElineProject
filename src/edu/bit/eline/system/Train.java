@@ -152,6 +152,7 @@ public class Train extends JFrame {
         btGroup.add(diggerCheck);
 
         classPanel = new JPanel();
+        classPanel.setPreferredSize(new Dimension(320, 50));
         classPanel.setBorder(BorderFactory.createTitledBorder("异常类"));
         classPanel.setLayout(new GridLayout(1, 2));
         classPanel.add(towerCheck);
@@ -221,7 +222,7 @@ public class Train extends JFrame {
         });
         increase.setAlignmentX(LEFT_ALIGNMENT);
         increasePanel = new JPanel();
-        increasePanel.setPreferredSize(new Dimension(320, 70));
+        increasePanel.setPreferredSize(new Dimension(320, 50));
         increasePanel.setLayout(new BoxLayout(increasePanel, BoxLayout.X_AXIS));
         increasePanel.setBorder(BorderFactory.createTitledBorder("增量学习"));
         increasePanel.add(increase);
@@ -234,8 +235,10 @@ public class Train extends JFrame {
         cons.gridy = 0;
         center.add(detection, cons);
         cons.gridy = 1;
-        center.add(samplePanel, cons);
+        center.add(classPanel, cons);
         cons.gridy = 2;
+        center.add(samplePanel, cons);
+        cons.gridy = 3;
         center.add(increasePanel, cons);
 
         // 动作按钮
@@ -300,7 +303,7 @@ public class Train extends JFrame {
         actionPanel.add(exit);
 
         GridBagLayout actLayout = new GridBagLayout();
-        cons.insets = new Insets(10, 5, 8, 5);
+        cons.insets = new Insets(15, 5, 15, 5);
         cons.gridx = 0;
         cons.gridy = 0;
         actLayout.setConstraints(getReady, cons);
@@ -411,8 +414,12 @@ public class Train extends JFrame {
                 tHelper.stopThread();
                 Utils.delete(new File(rootPath + "/models/" + name.getText()));
                 super.dispose();
+            } else {
+                return;
             }
-        } else {}
+        } else {
+            super.dispose();
+        }
     }
 
     private int validateStatus(int status) {
