@@ -215,24 +215,14 @@ public class Train extends JFrame {
         // 整个中部
         center = new JPanel();
         center.setLayout(new GridBagLayout());
-        GridBagConstraints detCons = new GridBagConstraints();
-        detCons.gridx = 0;
-        detCons.gridy = 0;
-        detCons.gridwidth = 1;
-        detCons.gridheight = 2;
-        center.add(detection, detCons);
-        GridBagConstraints smpCons = new GridBagConstraints();
-        smpCons.gridx = 0;
-        smpCons.gridy = 2;
-        smpCons.gridwidth = 1;
-        smpCons.gridheight = 2;
-        center.add(samplePanel, smpCons);
-        GridBagConstraints incCons = new GridBagConstraints();
-        incCons.gridx = 0;
-        incCons.gridy = 4;
-        incCons.gridwidth = 1;
-        incCons.gridheight = 1;
-        center.add(increasePanel, incCons);
+        GridBagConstraints cons = new GridBagConstraints();
+        cons.gridx = 0;
+        cons.gridy = 0;
+        center.add(detection, cons);
+        cons.gridy = 1;
+        center.add(samplePanel, cons);
+        cons.gridy = 2;
+        center.add(increasePanel, cons);
 
         // 动作按钮
         Dimension botDim = new Dimension(100, 28);
@@ -296,19 +286,18 @@ public class Train extends JFrame {
         actionPanel.add(exit);
 
         GridBagLayout actLayout = new GridBagLayout();
-        GridBagConstraints gbcon = new GridBagConstraints();
-        gbcon.insets = new Insets(10, 5, 8, 5);
-        gbcon.gridx = 0;
-        gbcon.gridy = 0;
-        actLayout.setConstraints(getReady, gbcon);
-        gbcon.gridy = 1;
-        actLayout.setConstraints(featExtract, gbcon);
-        gbcon.gridy = 2;
-        actLayout.setConstraints(paramOpti, gbcon);
-        gbcon.gridy = 3;
-        actLayout.setConstraints(train, gbcon);
-        gbcon.gridy = 4;
-        actLayout.setConstraints(exit, gbcon);
+        cons.insets = new Insets(10, 5, 8, 5);
+        cons.gridx = 0;
+        cons.gridy = 0;
+        actLayout.setConstraints(getReady, cons);
+        cons.gridy = 1;
+        actLayout.setConstraints(featExtract, cons);
+        cons.gridy = 2;
+        actLayout.setConstraints(paramOpti, cons);
+        cons.gridy = 3;
+        actLayout.setConstraints(train, cons);
+        cons.gridy = 4;
+        actLayout.setConstraints(exit, cons);
         actionPanel.setLayout(actLayout);
 
         // 南侧进度条部分
