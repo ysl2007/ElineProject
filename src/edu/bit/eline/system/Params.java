@@ -14,7 +14,6 @@ import org.json.JSONTokener;
 
 public class Params {
     private String configFile = "./config.json";
-
     public float   varThrshVal;
     public int     minAreaVal;
     public double  alphaVal;
@@ -29,8 +28,7 @@ public class Params {
         try {
             tokener = new JSONTokener(new FileReader(configFile));
         } catch (FileNotFoundException e) {
-            JOptionPane.showMessageDialog(null, "找不到配置文件。", "错误",
-                    JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(null, "找不到配置文件。", "错误", JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
             return;
         }
@@ -39,8 +37,7 @@ public class Params {
         try {
             rootPath = jo.getString("config_root_path");
         } catch (JSONException e) {
-            JOptionPane.showMessageDialog(null, "配置文件不完整。", "错误",
-                    JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(null, "配置文件不完整。", "错误", JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
             return;
         }
@@ -53,8 +50,7 @@ public class Params {
         tempscaleimgfeaturepath = tempPath + "image.feature.scale.temp";
         tempimgfeaturepath = tempPath + "image.feature.temp";
 
-        BufferedReader reader = new BufferedReader(new FileReader(new File(
-                modelPath + "recog.params")));
+        BufferedReader reader = new BufferedReader(new FileReader(new File(modelPath + "recog.params")));
         String params = reader.readLine();
         String[] paramList = params.split(" ");
         varThrshVal = Float.valueOf(paramList[0]);

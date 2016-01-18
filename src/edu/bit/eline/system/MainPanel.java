@@ -8,10 +8,12 @@ import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -56,38 +58,37 @@ public class MainPanel extends JFrame {
     private ImageStorage      storage;
     private ImageProvider     imgProvider;
 
-    private Container         container;
-    private JTree             treePanel;
-    private JLabel            statusTitle;
-    private JLabel            status;
-    private JPanel            commandPanel;
-    private JPanel            eastPanel;
-    private JPanel            centerPanel;
-    private JPanel            statusPanel;
-    private JButton           getTree;
-    private JButton           modelManager;
-    private JButton           runLine;
-    private JButton           runAll;
-    private JButton           stopLine;
-    private JButton           stopAll;
-    private JScrollPane       treeController;
-
-    ModelManager              mm;
+    private Container   container;
+    private JTree       treePanel;
+    private JLabel      statusTitle;
+    private JLabel      status;
+    private JPanel      commandPanel;
+    private JPanel      eastPanel;
+    private JPanel      centerPanel;
+    private JPanel      statusPanel;
+    private JButton     getTree;
+    private JButton     modelManager;
+    private JButton     runLine;
+    private JButton     runAll;
+    private JButton     stopLine;
+    private JButton     stopAll;
+    private JScrollPane treeController;
 
     class TreeCellRenderer extends DefaultTreeCellRenderer {
         private static final long serialVersionUID = -8890987966973311991L;
 
         @Override
-        public Component getTreeCellRendererComponent(JTree tree, Object value,
-                boolean sel, boolean expanded, boolean leaf, int row,
-                boolean hasFocus) {
-            super.getTreeCellRendererComponent(tree, value, sel, expanded,
-                    leaf, row, hasFocus);
+        public Component getTreeCellRendererComponent(JTree tree, Object value, boolean sel, boolean expanded,
+                boolean leaf, int row, boolean hasFocus) {
+            super.getTreeCellRendererComponent(tree, value, sel, expanded, leaf, row, hasFocus);
             DefaultMutableTreeNode node = (DefaultMutableTreeNode) value;
             String lineName = (String) node.getUserObject();
             File modelFile = new File(configPath + "models/" + lineName);
             if (modelFile.exists()) {
                 setForeground(Color.RED);
+            }
+            if (processer.isRunning(lineName)) {
+                setForeground(Color.GREEN);
             }
             return this;
         }
@@ -119,8 +120,7 @@ public class MainPanel extends JFrame {
                 if (getCameraTreeFromWeb()) {
                     System.out.println("Device tree obtained.");
                 } else {
-                    JOptionPane.showMessageDialog(null, "获取设备树失败。", "发生错误",
-                            JOptionPane.WARNING_MESSAGE);
+                    JOptionPane.showMessageDialog(null, "获取设备树失败。", "发生错误", JOptionPane.WARNING_MESSAGE);
                 }
             }
         });
@@ -146,8 +146,7 @@ public class MainPanel extends JFrame {
         runAll.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                List<String> allLeaves = getAllLeaf((DefaultMutableTreeNode) treePanel
-                        .getModel().getRoot());
+                List<String> allLeaves = getAllLeaf((DefaultMutableTreeNode) treePanel.getModel().getRoot());
                 for (String lineName : allLeaves) {
                     Params p = initRunner(lineName, true);
                     if (p != null) {
@@ -189,10 +188,9 @@ public class MainPanel extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 // TreeModel tree = treePanel.getModel();
-                DefaultMutableTreeNode tree = (DefaultMutableTreeNode) treePanel
-                        .getModel().getRoot();
+                DefaultMutableTreeNode tree = (DefaultMutableTreeNode) treePanel.getModel().getRoot();
                 List<String> cameraList = getAllLeaf(tree);
-                mm = new ModelManager(cameraList);
+                new ModelManager(cameraList);
 
             }
         });
@@ -243,8 +241,7 @@ public class MainPanel extends JFrame {
         treePanel.addTreeSelectionListener(new TreeSelectionListener() {
             @Override
             public void valueChanged(TreeSelectionEvent e) {
-                DefaultMutableTreeNode tnode = (DefaultMutableTreeNode) treePanel
-                        .getLastSelectedPathComponent();
+                DefaultMutableTreeNode tnode = (DefaultMutableTreeNode) treePanel.getLastSelectedPathComponent();
                 if (tnode.isLeaf()) {
                     curSelect = (String) tnode.getUserObject();
                     if (isRunning(curSelect)) {
@@ -289,12 +286,25 @@ public class MainPanel extends JFrame {
         } catch (Exception e) {
             return false;
         }
+        BufferedWriter bw = null;
+        try {
+            bw = new BufferedWriter(new FileWriter(new File(configPath + "deviceTree.json")));
+            bw.write(jsonTree);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                bw.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
         return true;
     }
 
     private boolean getCameraTreeFromFile() {
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(
-                new FileInputStream("./deviceTree.json"), "utf-8"))) {
+        try (BufferedReader br = new BufferedReader(
+                new InputStreamReader(new FileInputStream(configPath + "deviceTree.json"), "utf-8"))) {
             String jsonTree = br.readLine();
             DefaultTreeModel dt = parseJsonTree(jsonTree);
             treePanel.setModel(dt);
@@ -305,15 +315,13 @@ public class MainPanel extends JFrame {
     }
 
     private DefaultTreeModel parseJsonTree(String jsonStr) throws JSONException {
-        // System.out.println(jsonStr);
         JSONArray topArr = new JSONArray(jsonStr);
         DefaultMutableTreeNode root = new DefaultMutableTreeNode("根节点");
         recursiveParse(topArr, root, null);
         return new DefaultTreeModel(root);
     }
 
-    private void recursiveParse(JSONArray arr, DefaultMutableTreeNode father,
-            String fatName) throws JSONException {
+    private void recursiveParse(JSONArray arr, DefaultMutableTreeNode father, String fatName) throws JSONException {
         for (int i = 0; i < arr.length(); ++i) {
             JSONObject obj = arr.getJSONObject(i);
             String name = obj.getString("text");
@@ -338,8 +346,7 @@ public class MainPanel extends JFrame {
         String modelPath = configPath + "/models/" + lineName;
         if (!(new File(modelPath).exists())) {
             if (!quiet) {
-                JOptionPane.showMessageDialog(null, "模型文件不存在。", "遇到问题",
-                        JOptionPane.PLAIN_MESSAGE);
+                JOptionPane.showMessageDialog(null, "模型文件不存在。", "遇到问题", JOptionPane.PLAIN_MESSAGE);
             }
             return null;
         }
@@ -349,15 +356,13 @@ public class MainPanel extends JFrame {
             param = new Params(lineName);
         } catch (IOException e) {
             if (!quiet) {
-                JOptionPane.showMessageDialog(null, "模型文件读取错误，请检查文件是否存在或是否损坏。",
-                        "遇到问题", JOptionPane.PLAIN_MESSAGE);
+                JOptionPane.showMessageDialog(null, "模型文件读取错误，请检查文件是否存在或是否损坏。", "遇到问题", JOptionPane.PLAIN_MESSAGE);
             }
             return null;
         }
         if (param.checkParams() == false) {
             if (!quiet) {
-                JOptionPane.showMessageDialog(null, "模型文件不完整，可能需要重新训练。",
-                        "遇到问题", JOptionPane.PLAIN_MESSAGE);
+                JOptionPane.showMessageDialog(null, "模型文件不完整，可能需要重新训练。", "遇到问题", JOptionPane.PLAIN_MESSAGE);
             }
             return null;
         }
@@ -412,8 +417,7 @@ public class MainPanel extends JFrame {
         try {
             new MainPanel();
         } catch (FileNotFoundException e) {
-            JOptionPane.showMessageDialog(null, "找不到配置文件。", "错误",
-                    JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(null, "找不到配置文件。", "错误", JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
             return;
         }

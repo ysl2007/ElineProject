@@ -4,6 +4,9 @@ import java.awt.BorderLayout;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
@@ -41,23 +44,30 @@ import edu.bit.eline.recognise.svm.ImageClassification;
 public class MainPanelDemo extends JFrame {
     private static final long serialVersionUID = -8054742885149944542L;
 
-    private Detection         detection;
-    private Params            param;
+    private Detection detection;
+    private Params    param;
 
-    private JPanel            topLeft;
-    private JPanel            topRight;
-    private JPanel            topPanel;
-    private JButton           browseImg;
-    private JButton           browseModel;
-    private JButton           run;
-    private Container         container;
-    private ImagePanel        imagePanel;
-    private JTextField        dirField;
-    private JTextField        modelField;
-    private JTextField        varThrsh;
-    private JTextField        minArea;
-    private JTextField        alpha;
-    private JScrollPane       centerPanel;
+    private JPanel      topLeft;
+    private JPanel      topRight;
+    private JPanel      topPanel;
+    private JPanel      statusBar;
+    private JPanel      topMidArea;
+    private JLabel      fileName;
+    private JLabel      numOfPics;
+    private JButton     browseImg;
+    private JButton     browseModel;
+    private JButton     run;
+    private JButton     setPauseTime;
+    private JButton     stop;
+    private Container   container;
+    private ImagePanel  imagePanel;
+    private JTextField  dirField;
+    private JTextField  modelField;
+    private JTextField  varThrsh;
+    private JTextField  minArea;
+    private JTextField  alpha;
+    private JTextField  pauseTime;
+    private JScrollPane centerPanel;
 
     private class Detection implements Runnable {
         private Detector            detector;
@@ -66,6 +76,8 @@ public class MainPanelDemo extends JFrame {
         private ExtractFeature      ef;
         private ImageClassification ic;
         private Params              param;
+        private int                 pauseTime;
+        private boolean             run = true;
 
         public Detection(Params param) {
             this.param = param;
@@ -76,6 +88,14 @@ public class MainPanelDemo extends JFrame {
             ic = new ImageClassification();
         }
 
+        public void stop() {
+            this.run = false;
+        }
+
+        public void setPauseTime(float time) {
+            pauseTime = (int) (time * 1000);
+        }
+
         @Override
         public void run() {
             if (!param.checkParams()) {
@@ -84,47 +104,51 @@ public class MainPanelDemo extends JFrame {
             }
             int i = 0;
             for (String imgFilename : param.imgList) {
+                if (run == false) {
+                    break;
+                }
+                ++i;
+                fileName.setText(imgFilename);
+                numOfPics.setText(i + "/" + param.imgList.size());
                 BufferedImage bimg;
                 try {
                     bimg = ImageIO.read(new File(imgFilename));
                 } catch (IOException e) {
                     e.printStackTrace();
-                    System.err.println("Failed to open image file: "
-                            + imgFilename);
+                    System.err.println("Failed to open image file: " + imgFilename);
                     continue;
                 }
                 if (bimg == null)
                     continue;
-                System.out.println(++i);
                 Mat imgMat = converter.convert2Mat(bimg);
                 IplImage mask = detector.detect(imgMat, param.alphaVal, true);
-                List<Blob> blobList;
-                blobList = analyzer.analyze(mask);
+                List<Blob> blobList = analyzer.analyze(mask);
                 Color color = new Color(255, 0, 0);
+                System.out.println(blobList.size());
                 for (Blob blob : blobList) {
+                    if (run == false) {
+                        break;
+                    }
                     CvRect rect = blob.getRect();
-                    BufferedImage subimg = bimg.getSubimage(rect.x(), rect.y(),
-                            rect.width(), rect.height());
+                    BufferedImage subimg = bimg.getSubimage(rect.x(), rect.y(), rect.width(), rect.height());
                     String feature = ef.extractIMGfeature(subimg);
-                    String label = ic.classifyOneImg("4 " + feature,
-                            param.finalModelPath, param.scaleParamPath,
-                            param.tempimgfeaturepath,
-                            param.tempscaleimgfeaturepath,
-                            param.tempimageresultpath);
-                    if (!label.equals("0.0"))
+                    String label = ic.classifyOneImg("4 " + feature, param.finalModelPath, param.scaleParamPath,
+                            param.tempimgfeaturepath, param.tempscaleimgfeaturepath, param.tempimageresultpath);
+                    if (!label.equals("0.0")) {
                         imgMat = blob.drawRect(imgMat, color);
+                    }
                 }
                 BufferedImage imgProcessed = converter.convert2JavaImg(imgMat);
                 imagePanel.setImage(imgProcessed);
                 centerPanel.setViewportView(imagePanel);
-                imagePanel.setPreferredSize(new Dimension(imgProcessed
-                        .getWidth(), imgProcessed.getHeight()));
+                imagePanel.setPreferredSize(new Dimension(imgProcessed.getWidth(), imgProcessed.getHeight()));
                 try {
-                    Thread.sleep(500);
+                    Thread.sleep(pauseTime);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             }
+            JOptionPane.showMessageDialog(null, "处理完毕，已停止。");
         }
     }
 
@@ -132,14 +156,14 @@ public class MainPanelDemo extends JFrame {
         setupGUI();
     }
 
-    public void setupGUI() {
+    private void setupGUI() {
         container = new JPanel();
         container.setLayout(new BoxLayout(container, BoxLayout.Y_AXIS));
 
         // 左上角浏览文件夹部分
-        JLabel dirLabel = new JLabel("图片文件夹：");
-        dirField = new JTextField("e:/example/5");
-        dirField.setColumns(15);
+        JLabel dirLabel = new JLabel("图片文件夹");
+        dirField = new JTextField("e:\\example\\5");
+        dirField.setColumns(14);
         browseImg = new JButton("浏览");
         browseImg.addActionListener(new ActionListener() {
             @Override
@@ -148,9 +172,9 @@ public class MainPanelDemo extends JFrame {
             }
         });
 
-        JLabel modLabel = new JLabel("模型文件夹：");
+        JLabel modLabel = new JLabel("模型文件夹");
         modelField = new JTextField();
-        modelField.setColumns(15);
+        modelField.setColumns(14);
         browseModel = new JButton("浏览");
         browseModel.addActionListener(new ActionListener() {
             @Override
@@ -172,31 +196,33 @@ public class MainPanelDemo extends JFrame {
         modPanel.add(browseModel);
 
         topLeft = new JPanel();
-        topLeft.setBorder(BorderFactory.createTitledBorder("文件："));
+        topLeft.setBorder(BorderFactory.createTitledBorder("文件"));
         topLeft.setLayout(new BoxLayout(topLeft, BoxLayout.X_AXIS));
         topLeft.add(Box.createHorizontalStrut(5));
         topLeft.add(dirPanel);
         topLeft.add(Box.createHorizontalStrut(5));
         topLeft.add(modPanel);
 
-        // 右上角参数选择、运行
-        JPanel topRightArea = new JPanel();
-        topRightArea.setLayout(new FlowLayout(FlowLayout.LEFT));
-        topRightArea.add(new JLabel("Variance:"));
+        // 右上角参数选择
+        topMidArea = new JPanel();
+        topMidArea.setLayout(new FlowLayout(FlowLayout.LEFT));
+        topMidArea.add(new JLabel("方差"));
         varThrsh = new JTextField();
         varThrsh.setText("9");
-        varThrsh.setColumns(5);
-        topRightArea.add(varThrsh);
-        topRightArea.add(new JLabel("Learning Rate:"));
+        varThrsh.setColumns(3);
+        topMidArea.add(varThrsh);
+        topMidArea.add(new JLabel("学习率"));
         alpha = new JTextField();
         alpha.setText("0.1");
-        alpha.setColumns(5);
-        topRightArea.add(alpha);
-        topRightArea.add(new JLabel("Min Blob Area:"));
+        alpha.setColumns(3);
+        topMidArea.add(alpha);
+        topMidArea.add(new JLabel("最小识别面积"));
         minArea = new JTextField();
         minArea.setText("4000");
-        minArea.setColumns(5);
-        topRightArea.add(minArea);
+        minArea.setColumns(4);
+        topMidArea.add(minArea);
+        topMidArea.setBorder(BorderFactory.createTitledBorder("参数"));
+
         run = new JButton("运行");
         run.addActionListener(new ActionListener() {
             @Override
@@ -205,38 +231,92 @@ public class MainPanelDemo extends JFrame {
             }
         });
 
+        JLabel pause = new JLabel("暂停时间");
+        pauseTime = new JTextField();
+        pauseTime.setText("1");
+        pauseTime.setColumns(3);
+        setPauseTime = new JButton("设置");
+        setPauseTime.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (detection == null) {
+                    System.out.println("detection null");
+                    return;
+                }
+                detection.setPauseTime(Float.parseFloat(pauseTime.getText()));
+            }
+        });
+        stop = new JButton("停止");
+        stop.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                detection.stop();
+            }
+        });
+
         topRight = new JPanel();
-        topRight.setBorder(BorderFactory.createTitledBorder("参数："));
-        topRight.setLayout(new BoxLayout(topRight, BoxLayout.X_AXIS));
-        topRightArea.add(run);
-        topRight.add(topRightArea);
-        topRight.add(Box.createVerticalStrut(5));
+        topRight.setBorder(BorderFactory.createTitledBorder("运行"));
+        topRight.setLayout(new FlowLayout());
+        topRight.add(pause);
+        topRight.add(pauseTime);
+        topRight.add(setPauseTime);
+        topRight.add(run);
+        topRight.add(stop);
 
         topPanel = new JPanel();
         topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.X_AXIS));
         topPanel.setBorder(BorderFactory.createEtchedBorder());
         topPanel.add(topLeft);
+        topPanel.add(topMidArea);
         topPanel.add(topRight);
         topPanel.setEnabled(false);
 
         // 中部
         imagePanel = new ImagePanel();
+        imagePanel.setAlignmentX(CENTER_ALIGNMENT);
+        imagePanel.setAlignmentY(CENTER_ALIGNMENT);
         centerPanel = new JScrollPane();
         centerPanel.add(imagePanel);
-        centerPanel
-                .setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-        centerPanel
-                .setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        centerPanel.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        centerPanel.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+
+        // 状态栏
+        fileName = new JLabel();
+        fileName.setAlignmentX(JLabel.LEFT_ALIGNMENT);
+        numOfPics = new JLabel();
+        numOfPics.setAlignmentX(JLabel.LEFT_ALIGNMENT);
+        statusBar = new JPanel();
+        statusBar.setPreferredSize(new Dimension(100, 23));
+        statusBar.add(fileName);
+        statusBar.add(numOfPics);
+        GridBagLayout gd = new GridBagLayout();
+        GridBagConstraints gdCon = new GridBagConstraints();
+        gdCon.fill = GridBagConstraints.BOTH;
+        gdCon.anchor = GridBagConstraints.WEST;
+        gdCon.gridx = 0;
+        gdCon.gridy = 0;
+        gdCon.gridheight = 1;
+        gdCon.gridwidth = 2;
+        gdCon.insets = new Insets(0, 0, 0, 40);
+        gd.setConstraints(fileName, gdCon);
+        gdCon.gridx = 2;
+        gdCon.gridy = 0;
+        gdCon.gridheight = 1;
+        gdCon.gridwidth = 1;
+        gdCon.insets = new Insets(0, 40, 0, 0);
+        gd.setConstraints(numOfPics, gdCon);
+        statusBar.setLayout(gd);
 
         // 整个下部
         container.setLayout(new BorderLayout());
         container.add(topPanel, BorderLayout.NORTH);
         container.add(centerPanel, BorderLayout.CENTER);
+        container.add(statusBar, BorderLayout.SOUTH);
 
         finalSettings();
     }
 
-    protected void browseButton(JTextField textField) {
+    private void browseButton(JTextField textField) {
         JFileChooser dirChooser = new JFileChooser();
         dirChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
         int returnVal = dirChooser.showOpenDialog(null);
@@ -246,7 +326,7 @@ public class MainPanelDemo extends JFrame {
         }
     }
 
-    protected List<String> getImgList() {
+    private List<String> getImgList() {
         List<String> imgList = new ArrayList<String>();
         String path = dirField.getText();
         File directory = new File(path);
@@ -254,10 +334,7 @@ public class MainPanelDemo extends JFrame {
         File[] imgInDir = directory.listFiles(new FilenameFilter() {
             @Override
             public boolean accept(File arg0, String arg1) {
-                arg1 = arg1.toLowerCase();
-                if (arg1.endsWith("jpg"))
-                    return true;
-                return false;
+                return arg1.toLowerCase().endsWith("jpg");
             }
         });
         if (null == imgInDir) {
@@ -269,20 +346,25 @@ public class MainPanelDemo extends JFrame {
         return imgList;
     }
 
-    protected void runButtom() {
+    private void runButtom() {
         varThrsh.setEditable(false);
         minArea.setEditable(false);
         alpha.setEditable(false);
         if (paramInitialize(modelField.getText())) {
             detection = new Detection(param);
-            new Thread(detection).start();
+            try {
+                detection.setPauseTime(Float.parseFloat(pauseTime.getText()));
+                new Thread(detection).start();
+            } catch (NumberFormatException e) {
+                JOptionPane.showMessageDialog(null, "参数有误。", "错误", JOptionPane.ERROR_MESSAGE);
+            }
         }
         varThrsh.setEditable(true);
         minArea.setEditable(true);
         alpha.setEditable(true);
     }
 
-    protected boolean paramInitialize(String rootDir) {
+    private boolean paramInitialize(String rootDir) {
         param = new Params(rootDir);
         try {
             param.varThrshVal = Float.parseFloat(varThrsh.getText());
@@ -302,7 +384,7 @@ public class MainPanelDemo extends JFrame {
 
     private void finalSettings() {
         this.setContentPane(container);
-        setSize(1290, 800);
+        setSize(1300, 855);
         setTitle("Demo");
         setVisible(true);
         setResizable(true);

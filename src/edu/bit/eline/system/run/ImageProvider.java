@@ -12,6 +12,7 @@ public class ImageProvider implements Runnable {
     private ImageStorage     storage;
     private Processer        processer;
     private Calendar         lastTime;
+    private Calendar         rightNow;
     private SimpleDateFormat format;
     private Deque<String>    usedPicQueue;
     private int              maxCapacity = 750;
@@ -21,7 +22,7 @@ public class ImageProvider implements Runnable {
         this.processer = processer;
         this.format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         this.lastTime = Calendar.getInstance();
-        this.lastTime.add(Calendar.MINUTE, -10);
+        this.lastTime.add(Calendar.MINUTE, -20);
         this.usedPicQueue = new ArrayDeque<String>();
     }
 
@@ -31,17 +32,14 @@ public class ImageProvider implements Runnable {
             List<String> pathList = null;
             List<String> runningLines = processer.getRunningLine();
 
-            Calendar rightNow = Calendar.getInstance();
+            rightNow = Calendar.getInstance();
             rightNow.add(Calendar.MINUTE, 5);
             String begTime = format.format(lastTime.getTime());
             String endTime = format.format(rightNow.getTime());
-            rightNow.add(Calendar.MINUTE, -20);
-            lastTime = rightNow;
+            lastTime = generateLastTime(rightNow);
             for (String lineName : runningLines) {
-//            	System.out.println(begTime + " " + endTime);
-                pathList = HttpInterface.getImageList(lineName, begTime,
-                        endTime);
-                System.out.println(pathList.size());
+                pathList = HttpInterface.getImageList(lineName, begTime, endTime);
+                System.out.println("img list length: " + pathList.size());
                 for (String path : pathList) {
                     BufferedImage bimg = HttpInterface.getImage(path);
                     if (bimg == null || usedPicQueue.contains(path)) {
@@ -52,7 +50,6 @@ public class ImageProvider implements Runnable {
                         imgFilename = URLDecoder.decode(path, "UTF-8");
                         int index = imgFilename.lastIndexOf("/") + 1;
                         imgFilename = imgFilename.substring(index, imgFilename.length());
-                        
                     } catch (Exception e) {
                         e.printStackTrace();
                         continue;
@@ -61,8 +58,7 @@ public class ImageProvider implements Runnable {
                         usedPicQueue.removeFirst();
                     }
                     usedPicQueue.add(path);
-                    Pair<String, BufferedImage> imgPair = new Pair<String, BufferedImage>(
-                            imgFilename, bimg);
+                    Pair<String, BufferedImage> imgPair = new Pair<String, BufferedImage>(imgFilename, bimg);
                     storage.put(new Pair<String, Pair<String, BufferedImage>>(lineName, imgPair));
                 }
             }
@@ -75,24 +71,16 @@ public class ImageProvider implements Runnable {
         }
     }
 
-    public void test() {
-        String line = "安都17(动态风险)";
-        String st = "2015-12-22 14:20:00";
-        String et = "2015-12-22 15:55:00";
-        List<String> pathList = HttpInterface.getImageList(line, st, et);
-        // System.out.println(pathList);
-        System.out.println(pathList.size());
-        for (String path : pathList) {
-            System.out.println(path);
-//            BufferedImage bimg = HttpInterface.getImage(path);
-//            System.out.println(bimg);
+    private Calendar generateLastTime(Calendar rightNow) {
+        Calendar zero = Calendar.getInstance();
+        zero.set(Calendar.HOUR, -12);
+        zero.set(Calendar.MINUTE, 0);
+        zero.set(Calendar.SECOND, 0);
+        zero.set(Calendar.MILLISECOND, 0);
+        rightNow.add(Calendar.MINUTE, -20);
+        if (rightNow.compareTo(zero) < 0) {
+            rightNow = (Calendar) zero.clone();
         }
-    }
-
-    public static void main(String[] args) {
-        ImageStorage storage = new ImageStorage();
-        Processer processer = new Processer(storage);
-        ImageProvider p = new ImageProvider(storage, processer);
-        p.test();
+        return rightNow;
     }
 }
