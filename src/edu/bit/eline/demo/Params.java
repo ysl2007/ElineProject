@@ -1,6 +1,5 @@
 package edu.bit.eline.demo;
 
-import java.io.BufferedWriter;
 import java.io.File;
 import java.util.List;
 
@@ -14,7 +13,6 @@ public class Params {
     public String         tempscaleimgfeaturepath;
     public String         tempimageresultpath;
     public List<String>   imgList;
-    public BufferedWriter out;
 
     public Params(String rootPath) {
         rootPath += "/";
@@ -38,9 +36,6 @@ public class Params {
             return false;
         if (varThrshVal < 0 || alphaVal <= 0)
             return false;
-        if (out == null){
-            return false;
-        }
         return true;
     }
 }

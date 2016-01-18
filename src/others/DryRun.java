@@ -91,8 +91,8 @@ public class DryRun {
     }
 
     public static void main(String[] args) {
-        String path = "E:\\testLines\\北胡11(动态风险)\\2013-11-30北胡11(动态风险)";
-        String dest = "E:\\testLines\\北胡11(动态风险)\\sample";
+        String path = "E:\\testLines\\lines\\八宝一二5(动态风险)\\2014-08-17八宝一二5(动态风险)";
+        String dest = "E:\\testLines\\samples\\八宝一二5(动态风险)\\sample";
         run(path, dest);
     }
 }

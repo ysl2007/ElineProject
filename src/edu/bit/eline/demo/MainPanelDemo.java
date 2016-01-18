@@ -10,9 +10,7 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -60,6 +58,7 @@ public class MainPanelDemo extends JFrame {
     private JButton     browseModel;
     private JButton     run;
     private JButton     setPauseTime;
+    private JButton     stop;
     private Container   container;
     private ImagePanel  imagePanel;
     private JTextField  dirField;
@@ -78,6 +77,7 @@ public class MainPanelDemo extends JFrame {
         private ImageClassification ic;
         private Params              param;
         private int                 pauseTime;
+        private boolean             run = true;
 
         public Detection(Params param) {
             this.param = param;
@@ -86,6 +86,10 @@ public class MainPanelDemo extends JFrame {
             converter = new ImageConverter();
             ef = new ExtractFeature();
             ic = new ImageClassification();
+        }
+
+        public void stop() {
+            this.run = false;
         }
 
         public void setPauseTime(float time) {
@@ -100,6 +104,9 @@ public class MainPanelDemo extends JFrame {
             }
             int i = 0;
             for (String imgFilename : param.imgList) {
+                if (run == false) {
+                    break;
+                }
                 ++i;
                 fileName.setText(imgFilename);
                 numOfPics.setText(i + "/" + param.imgList.size());
@@ -117,7 +124,11 @@ public class MainPanelDemo extends JFrame {
                 IplImage mask = detector.detect(imgMat, param.alphaVal, true);
                 List<Blob> blobList = analyzer.analyze(mask);
                 Color color = new Color(255, 0, 0);
+                System.out.println(blobList.size());
                 for (Blob blob : blobList) {
+                    if (run == false) {
+                        break;
+                    }
                     CvRect rect = blob.getRect();
                     BufferedImage subimg = bimg.getSubimage(rect.x(), rect.y(), rect.width(), rect.height());
                     String feature = ef.extractIMGfeature(subimg);
@@ -125,15 +136,6 @@ public class MainPanelDemo extends JFrame {
                             param.tempimgfeaturepath, param.tempscaleimgfeaturepath, param.tempimageresultpath);
                     if (!label.equals("0.0")) {
                         imgMat = blob.drawRect(imgMat, color);
-                        int topx = rect.x(), topy = rect.y();
-                        int botx = topx + rect.width(), boty = topy + rect.height();
-                        String str = imgFilename + ": " + topx + ", " + topy + ", " + botx + ", " + boty + "\n";
-                        try {
-                            param.out.write(str);
-                        } catch (IOException e) {
-                            System.out.println("写入文件出现问题。");
-                            e.printStackTrace();
-                        }
                     }
                 }
                 BufferedImage imgProcessed = converter.convert2JavaImg(imgMat);
@@ -146,12 +148,7 @@ public class MainPanelDemo extends JFrame {
                     e.printStackTrace();
                 }
             }
-            try {
-                param.out.flush();
-                param.out.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            JOptionPane.showMessageDialog(null, "处理完毕，已停止。");
         }
     }
 
@@ -166,7 +163,7 @@ public class MainPanelDemo extends JFrame {
         // 左上角浏览文件夹部分
         JLabel dirLabel = new JLabel("图片文件夹");
         dirField = new JTextField("e:\\example\\5");
-        dirField.setColumns(15);
+        dirField.setColumns(14);
         browseImg = new JButton("浏览");
         browseImg.addActionListener(new ActionListener() {
             @Override
@@ -177,7 +174,7 @@ public class MainPanelDemo extends JFrame {
 
         JLabel modLabel = new JLabel("模型文件夹");
         modelField = new JTextField();
-        modelField.setColumns(15);
+        modelField.setColumns(14);
         browseModel = new JButton("浏览");
         browseModel.addActionListener(new ActionListener() {
             @Override
@@ -212,17 +209,17 @@ public class MainPanelDemo extends JFrame {
         topMidArea.add(new JLabel("方差"));
         varThrsh = new JTextField();
         varThrsh.setText("9");
-        varThrsh.setColumns(5);
+        varThrsh.setColumns(3);
         topMidArea.add(varThrsh);
         topMidArea.add(new JLabel("学习率"));
         alpha = new JTextField();
         alpha.setText("0.1");
-        alpha.setColumns(5);
+        alpha.setColumns(3);
         topMidArea.add(alpha);
         topMidArea.add(new JLabel("最小识别面积"));
         minArea = new JTextField();
         minArea.setText("4000");
-        minArea.setColumns(5);
+        minArea.setColumns(4);
         topMidArea.add(minArea);
         topMidArea.setBorder(BorderFactory.createTitledBorder("参数"));
 
@@ -249,6 +246,13 @@ public class MainPanelDemo extends JFrame {
                 detection.setPauseTime(Float.parseFloat(pauseTime.getText()));
             }
         });
+        stop = new JButton("停止");
+        stop.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                detection.stop();
+            }
+        });
 
         topRight = new JPanel();
         topRight.setBorder(BorderFactory.createTitledBorder("运行"));
@@ -257,6 +261,7 @@ public class MainPanelDemo extends JFrame {
         topRight.add(pauseTime);
         topRight.add(setPauseTime);
         topRight.add(run);
+        topRight.add(stop);
 
         topPanel = new JPanel();
         topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.X_AXIS));
@@ -268,6 +273,8 @@ public class MainPanelDemo extends JFrame {
 
         // 中部
         imagePanel = new ImagePanel();
+        imagePanel.setAlignmentX(CENTER_ALIGNMENT);
+        imagePanel.setAlignmentY(CENTER_ALIGNMENT);
         centerPanel = new JScrollPane();
         centerPanel.add(imagePanel);
         centerPanel.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
@@ -363,16 +370,10 @@ public class MainPanelDemo extends JFrame {
             param.varThrshVal = Float.parseFloat(varThrsh.getText());
             param.minAreaVal = Integer.parseInt(minArea.getText());
             param.alphaVal = Double.parseDouble(alpha.getText());
-            String imgDir = dirField.getText();
-            String outFileName = "." + imgDir.substring(imgDir.lastIndexOf("\\"));
-            param.out = new BufferedWriter(new FileWriter(new File(outFileName)));
         } catch (NumberFormatException e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(null, "参数输入错误。");
             return false;
-        } catch (IOException e) {
-            JOptionPane.showMessageDialog(null, "输出文件创建失败。");
-            e.printStackTrace();
         }
         param.imgList = getImgList();
         if (!param.checkParams()) {
@@ -383,7 +384,7 @@ public class MainPanelDemo extends JFrame {
 
     private void finalSettings() {
         this.setContentPane(container);
-        setSize(1290, 800);
+        setSize(1300, 855);
         setTitle("Demo");
         setVisible(true);
         setResizable(true);
