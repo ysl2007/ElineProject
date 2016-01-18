@@ -290,7 +290,11 @@ public class MainPanel extends JFrame {
         try {
             bw = new BufferedWriter(new FileWriter(new File(configPath + "deviceTree.json")));
             bw.write(jsonTree);
+<<<<<<< HEAD
         } catch (IOException e) {
+=======
+        } catch (IOException e){
+>>>>>>> refs/remotes/origin/singleClass
             e.printStackTrace();
         } finally {
             try {
@@ -303,8 +307,13 @@ public class MainPanel extends JFrame {
     }
 
     private boolean getCameraTreeFromFile() {
+<<<<<<< HEAD
         try (BufferedReader br = new BufferedReader(
                 new InputStreamReader(new FileInputStream(configPath + "deviceTree.json"), "utf-8"))) {
+=======
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(
+                new FileInputStream(configPath + "deviceTree.json"), "utf-8"))) {
+>>>>>>> refs/remotes/origin/singleClass
             String jsonTree = br.readLine();
             DefaultTreeModel dt = parseJsonTree(jsonTree);
             treePanel.setModel(dt);
