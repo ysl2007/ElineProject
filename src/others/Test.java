@@ -9,15 +9,24 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.sql.PreparedStatement;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Date;
 
 import javax.imageio.ImageIO;
 
 import edu.bit.eline.system.run.SQLConnection;
 
 public class Test {
-    public static void main(String[] args) throws Exception {
-        char c = '1';
-        System.out.println(c + " " + "abc");
+    public static void main(String[] args) {
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+        Date date = null;
+        try {
+            date = format.parse("2016--3-12");
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        System.out.println(date);
     }
 }

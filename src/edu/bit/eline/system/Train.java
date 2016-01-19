@@ -36,12 +36,16 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 
+import edu.bit.eline.system.run.DryRun;
+
 public class Train extends JFrame {
     private static final long serialVersionUID = 3541303824514014559L;
     private TrainHelper       tHelper;
     private String            selectedClass;
     private String            configFile       = "./config.json";
     private String            rootPath;
+    private DryRun            dr;
+    private Thread            dryRunThread;
     private boolean           increaseTrain    = false;
 
     private Container    container;
@@ -54,6 +58,7 @@ public class Train extends JFrame {
     private JPanel       buttonPanel;
     private JPanel       actionPanel;
     private JPanel       increasePanel;
+    private JPanel       dryRunPanel;
     private JButton      getReady;
     private JButton      featExtract;
     private JButton      paramOpti;
@@ -61,6 +66,8 @@ public class Train extends JFrame {
     private JButton      positiveDirBrowse;
     private JButton      negativeDirBrowse;
     private JButton      exit;
+    private JButton      dryRun;
+    private JButton      dryRunDirBrowse;
     private JCheckBox    increase;
     private JTextField   name;
     private JTextField   var;
@@ -68,6 +75,8 @@ public class Train extends JFrame {
     private JTextField   minArea;
     private JTextField   positiveDirField;
     private JTextField   negativeDirField;
+    private JTextField   dryRunDate;
+    private JTextField   dryRunDir;
     private ButtonGroup  btGroup;
     private JProgressBar progressBar;
     private JRadioButton towerCheck;
@@ -106,7 +115,7 @@ public class Train extends JFrame {
         }
     }
 
-    protected void setupGUI(String lineName) {
+    private void setupGUI(String lineName) {
         // detection参数部分
         detParams = new JPanel();
         GridLayout gl = new GridLayout(4, 2);
@@ -137,6 +146,67 @@ public class Train extends JFrame {
         detection.add(detParams);
         detection.add(Box.createHorizontalStrut(5));
 
+        // Dry run
+        JLabel dryRunDirLabel = new JLabel("文件夹：");
+        dryRunDirLabel.setAlignmentX(LEFT_ALIGNMENT);
+        dryRunDir = new JTextField();
+        dryRunDir.setColumns(14);
+        dryRunDirBrowse = new JButton("浏览");
+        dryRunDirBrowse.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                JFileChooser dirChooser = new JFileChooser();
+                dirChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+                int returnVal = dirChooser.showOpenDialog(null);
+                if (returnVal == JFileChooser.APPROVE_OPTION) {
+                    String selectedDir = dirChooser.getSelectedFile().getAbsolutePath();
+                    negativeDirField.setText(selectedDir);
+                }
+            }
+        });
+
+        JLabel dryRunDateLabel = new JLabel("日期：");
+        dryRunDateLabel.setAlignmentX(LEFT_ALIGNMENT);
+        dryRunDate = new JTextField();
+        dryRunDate.setColumns(14);
+        dryRun = new JButton("运行");
+        dryRun.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                dryRun(dryRunDir.getText(), dryRunDate.getText());
+            }
+        });
+
+        dryRunPanel = new JPanel();
+        GridBagLayout dryRunLayout = new GridBagLayout();
+        dryRunPanel.setPreferredSize(new Dimension(320, 95));
+        dryRunPanel.setBorder(BorderFactory.createTitledBorder("空跑"));
+        dryRunPanel.setLayout(dryRunLayout);
+        dryRunPanel.add(dryRunDirLabel);
+        dryRunPanel.add(dryRunDir);
+        dryRunPanel.add(dryRunDirBrowse);
+        dryRunPanel.add(dryRunDateLabel);
+        dryRunPanel.add(dryRunDate);
+        dryRunPanel.add(dryRun);
+
+        GridBagConstraints cons = new GridBagConstraints();
+        cons.gridx = 0;
+        cons.gridy = 0;
+        cons.anchor = GridBagConstraints.WEST;
+        cons.insets = new Insets(5, 5, 5, 5);
+        dryRunLayout.setConstraints(dryRunDirLabel, cons);
+        cons.gridx = 1;
+        dryRunLayout.setConstraints(dryRunDir, cons);
+        cons.gridx = 2;
+        dryRunLayout.setConstraints(dryRunDirBrowse, cons);
+        cons.gridx = 0;
+        cons.gridy = 1;
+        dryRunLayout.setConstraints(dryRunDateLabel, cons);
+        cons.gridx = 1;
+        dryRunLayout.setConstraints(dryRunDate, cons);
+        cons.gridx = 2;
+        dryRunLayout.setConstraints(dryRun, cons);
+
         // 异常类别部分
         CheckListener listener = new CheckListener();
         towerCheck = new JRadioButton("吊车");
@@ -161,7 +231,7 @@ public class Train extends JFrame {
         // 样本路径选择
         JLabel positiveDir = new JLabel("正例样本路径：");
         positiveDirField = new JTextField();
-        positiveDirField.setColumns(10);
+        positiveDirField.setColumns(12);
         positiveDirBrowse = new JButton("浏览");
         positiveDirBrowse.addActionListener(new ActionListener() {
             @Override
@@ -182,7 +252,7 @@ public class Train extends JFrame {
 
         JLabel negativeDir = new JLabel("负例样本路径：");
         negativeDirField = new JTextField();
-        negativeDirField.setColumns(10);
+        negativeDirField.setColumns(12);
         negativeDirBrowse = new JButton("浏览");
         negativeDirBrowse.addActionListener(new ActionListener() {
             @Override
@@ -229,17 +299,26 @@ public class Train extends JFrame {
 
         // 整个中部
         center = new JPanel();
-        center.setLayout(new GridBagLayout());
-        GridBagConstraints cons = new GridBagConstraints();
+        center.add(detection, cons);
+        center.add(dryRunPanel);
+        center.add(classPanel, cons);
+        center.add(samplePanel, cons);
+        center.add(increasePanel, cons);
+
+        GridBagLayout centerLayout = new GridBagLayout();
+        center.setLayout(centerLayout);
+        cons = new GridBagConstraints();
         cons.gridx = 0;
         cons.gridy = 0;
-        center.add(detection, cons);
+        centerLayout.setConstraints(detection, cons);
         cons.gridy = 1;
-        center.add(classPanel, cons);
+        centerLayout.setConstraints(dryRunPanel, cons);
         cons.gridy = 2;
-        center.add(samplePanel, cons);
+        centerLayout.setConstraints(classPanel, cons);
         cons.gridy = 3;
-        center.add(increasePanel, cons);
+        centerLayout.setConstraints(samplePanel, cons);
+        cons.gridy = 4;
+        centerLayout.setConstraints(increasePanel, cons);
 
         // 动作按钮
         Dimension botDim = new Dimension(100, 28);
@@ -339,6 +418,13 @@ public class Train extends JFrame {
         container.add(topPanel);
     }
 
+    private void dryRun(String tgtDir, String date) {
+        dr = new DryRun(name.getText(), tgtDir, date);
+        dr.setCallBack(this);
+        dryRunThread = new Thread(dr);
+        dryRunThread.start();
+    }
+
     private void getReady() {
         name.setEditable(false);
         String lineName = name.getText();
@@ -405,23 +491,6 @@ public class Train extends JFrame {
         }
     }
 
-    @Override
-    public void dispose() {
-        if (tHelper != null && validateStatus(TrainHelper.MODEL_TRAINED) != 0) {
-            int status = JOptionPane.showConfirmDialog(null, "训练尚未完成，如果关闭窗口，则会删除已有临时文件，是否继续？", "训练未完成",
-                    JOptionPane.YES_NO_OPTION);
-            if (status == JOptionPane.YES_OPTION) {
-                tHelper.stopThread();
-                Utils.delete(new File(rootPath + "/models/" + name.getText()));
-                super.dispose();
-            } else {
-                return;
-            }
-        } else {
-            super.dispose();
-        }
-    }
-
     private int validateStatus(int status) {
         if (tHelper == null)
             return -1;
@@ -436,7 +505,7 @@ public class Train extends JFrame {
 
     private void finalSettings() {
         this.setContentPane(container);
-        setSize(450, 480);
+        setSize(450, 510);
         setTitle("模型训练");
         setVisible(true);
         setResizable(false);
@@ -444,6 +513,29 @@ public class Train extends JFrame {
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
     }
 
+    @Override
+    public void dispose() {
+        if (tHelper != null && validateStatus(TrainHelper.MODEL_TRAINED) != 0) {
+            int status = JOptionPane.showConfirmDialog(null, "训练尚未完成，如果关闭窗口，则会删除已有临时文件，是否继续？", "训练未完成",
+                    JOptionPane.YES_NO_OPTION);
+            if (status == JOptionPane.YES_OPTION) {
+                tHelper.stopThread();
+                Utils.delete(new File(rootPath + "/models/" + name.getText()));
+                super.dispose();
+            } else {
+                return;
+            }
+        } else {
+            if (dryRunThread != null && dryRunThread.isAlive()) {
+                dr.stopRun();
+            }
+            super.dispose();
+        }
+    }
+
+    public void dryRunCallback(){
+        JOptionPane.showMessageDialog(null, "空跑完成。", "完成", JOptionPane.PLAIN_MESSAGE);
+    }
     public static void main(String[] args) {
         new Train("line");
     }
