@@ -160,7 +160,7 @@ public class Train extends JFrame {
                 int returnVal = dirChooser.showOpenDialog(null);
                 if (returnVal == JFileChooser.APPROVE_OPTION) {
                     String selectedDir = dirChooser.getSelectedFile().getAbsolutePath();
-                    negativeDirField.setText(selectedDir);
+                    dryRunDir.setText(selectedDir);
                 }
             }
         });
@@ -533,10 +533,11 @@ public class Train extends JFrame {
         }
     }
 
-    public void dryRunCallback(){
+    public void dryRunCallback() {
         JOptionPane.showMessageDialog(null, "空跑完成。", "完成", JOptionPane.PLAIN_MESSAGE);
     }
+
     public static void main(String[] args) {
-        new Train("line");
+        new Train("安都17(动态风险)");
     }
 }
