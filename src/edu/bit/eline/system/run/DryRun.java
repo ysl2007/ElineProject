@@ -28,6 +28,9 @@ public class DryRun implements Runnable {
 
     public DryRun(String lineName, String tgtPath, String date) {
         this.lineName = lineName;
+        if (!tgtPath.endsWith("\\")) {
+            tgtPath += "\\";
+        }
         this.tgtPath = tgtPath;
         this.date = date;
     }
@@ -64,6 +67,7 @@ public class DryRun implements Runnable {
                 continue;
             }
             fileName = fileName.substring(fileName.lastIndexOf("/") + 1);
+            System.out.println(fileName);
             BufferedImage bimg = HttpInterface.getImage(imgPath);
             Mat imgMat = converter.convert2Mat(bimg);
             if (imgMat == null)
@@ -114,7 +118,7 @@ public class DryRun implements Runnable {
     }
 
     private List<String> getImgList() {
-        String start = date + " 00:07:30";
+        String start = date + " 07:30:00";
         String end = date + " 23:59:59";
         List<String> imgList = HttpInterface.getImageList(lineName, start, end);
         return imgList;

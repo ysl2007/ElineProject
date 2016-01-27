@@ -205,7 +205,7 @@ public class ExtractFeature implements Runnable {
                 for (int j = 0; j < negImageList.length && runFlag; j++) {
                     if (!runFlag)
                         return;
-                    String features = extractIMGfeature(posImageList[j]);
+                    String features = extractIMGfeature(negImageList[j]);
                     if (features != null) {
                         outFile.write("0 " + features + "\n");
                         System.out.println(features);

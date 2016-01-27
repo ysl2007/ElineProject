@@ -8,8 +8,6 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.util.Arrays;
-import java.util.List;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -21,9 +19,14 @@ import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JTree;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.event.TreeSelectionEvent;
+import javax.swing.event.TreeSelectionListener;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.TreeModel;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -36,20 +39,20 @@ public class ModelManager extends JFrame {
     private String            curSelectedLine;
     private String            curSelectedModel;
 
-    private Container     container;
-    private JButton       refresh;
-    private JButton       trainModel;
-    private JButton       delModel;
-    private JButton       add;
-    private JList<String> cameraList;
-    private JList<String> modelList;
-    private JPanel        leftPane;
-    private JPanel        midPane;
-    private JPanel        rightPane;
-    private JScrollPane   cameraListController;
-    private JScrollPane   modelListController;
+    private Container         container;
+    private JButton           refresh;
+    private JButton           trainModel;
+    private JButton           delModel;
+    private JButton           add;
+    private JTree             cameraTree;
+    private JList<String>     modelList;
+    private JPanel            leftPane;
+    private JPanel            midPane;
+    private JPanel            rightPane;
+    private JScrollPane       cameraListController;
+    private JScrollPane       modelListController;
 
-    public ModelManager(List<String> lineList) {
+    public ModelManager(TreeModel tree) {
         JSONTokener tokener;
         try {
             tokener = new JSONTokener(new FileReader(configFile));
@@ -68,25 +71,21 @@ public class ModelManager extends JFrame {
             return;
         }
         modelDir = configPath + "/models/";
-        setupGUI(lineList);
+        setupGUI(tree);
     }
 
-    private void setupGUI(List<String> lineList) {
+    private void setupGUI(TreeModel tree) {
         // 摄像头列表
-        DefaultListModel<String> listModel = new DefaultListModel<String>();
-        for (String line : lineList) {
-            listModel.addElement(line);
-        }
-        cameraList = new JList<String>();
-        cameraList.setModel(listModel);
-        cameraList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        cameraList.addListSelectionListener(new ListSelectionListener() {
+        cameraTree = new JTree();
+        cameraTree.setModel(tree);
+        cameraTree.addTreeSelectionListener(new TreeSelectionListener() {
             @Override
-            public void valueChanged(ListSelectionEvent e) {
-                curSelectedLine = cameraList.getSelectedValue();
+            public void valueChanged(TreeSelectionEvent e) {
+                DefaultMutableTreeNode tnode = (DefaultMutableTreeNode) cameraTree.getLastSelectedPathComponent();
+                curSelectedLine = (String) tnode.getUserObject();
             }
         });
-        cameraListController = new JScrollPane(cameraList);
+        cameraListController = new JScrollPane(cameraTree);
 
         // 左侧线路列表
         leftPane = new JPanel();
@@ -236,10 +235,5 @@ public class ModelManager extends JFrame {
             return false;
         }
         return true;
-    }
-
-    public static void main(String[] args) {
-        String[] lines = { "line1", "line2", "line3", "line4" };
-        new ModelManager(Arrays.asList(lines));
     }
 }

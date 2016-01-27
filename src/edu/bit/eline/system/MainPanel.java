@@ -12,10 +12,12 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -37,6 +39,9 @@ import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreeModel;
+import javax.swing.tree.TreeNode;
+import javax.swing.tree.TreePath;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -58,21 +63,21 @@ public class MainPanel extends JFrame {
     private ImageStorage      storage;
     private ImageProvider     imgProvider;
 
-    private Container   container;
-    private JTree       treePanel;
-    private JLabel      statusTitle;
-    private JLabel      status;
-    private JPanel      commandPanel;
-    private JPanel      eastPanel;
-    private JPanel      centerPanel;
-    private JPanel      statusPanel;
-    private JButton     getTree;
-    private JButton     modelManager;
-    private JButton     runLine;
-    private JButton     runAll;
-    private JButton     stopLine;
-    private JButton     stopAll;
-    private JScrollPane treeController;
+    private Container         container;
+    private JTree             treePanel;
+    private JLabel            statusTitle;
+    private JLabel            status;
+    private JPanel            commandPanel;
+    private JPanel            eastPanel;
+    private JPanel            centerPanel;
+    private JPanel            statusPanel;
+    private JButton           getTree;
+    private JButton           modelManager;
+    private JButton           runLine;
+    private JButton           runAll;
+    private JButton           stopLine;
+    private JButton           stopAll;
+    private JScrollPane       treeController;
 
     class TreeCellRenderer extends DefaultTreeCellRenderer {
         private static final long serialVersionUID = -8890987966973311991L;
@@ -118,9 +123,9 @@ public class MainPanel extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (getCameraTreeFromWeb()) {
-                    System.out.println("Device tree obtained.");
+                    JOptionPane.showMessageDialog(null, "获取设备树成功！", "成功", JOptionPane.WARNING_MESSAGE);
                 } else {
-                    JOptionPane.showMessageDialog(null, "获取设备树失败。", "发生错误", JOptionPane.WARNING_MESSAGE);
+                    JOptionPane.showMessageDialog(null, "获取设备树失败。", "错误", JOptionPane.WARNING_MESSAGE);
                 }
             }
         });
@@ -188,9 +193,9 @@ public class MainPanel extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 // TreeModel tree = treePanel.getModel();
-                DefaultMutableTreeNode tree = (DefaultMutableTreeNode) treePanel.getModel().getRoot();
-                List<String> cameraList = getAllLeaf(tree);
-                new ModelManager(cameraList);
+                TreeModel tree = treePanel.getModel();
+                // List<String> cameraList = getAllLeaf(tree);
+                new ModelManager(tree);
             }
         });
 
@@ -236,6 +241,7 @@ public class MainPanel extends JFrame {
         // 中部设备树
         treePanel = new JTree();
         getCameraTreeFromFile();
+        expandAll(treePanel, new TreePath(treePanel.getModel().getRoot()));
         treePanel.setCellRenderer(new TreeCellRenderer());
         treePanel.addTreeSelectionListener(new TreeSelectionListener() {
             @Override
@@ -275,19 +281,27 @@ public class MainPanel extends JFrame {
     }
 
     protected boolean getCameraTreeFromWeb() {
-        String jsonTree = HttpInterface.getDeviceTree();
+        String jsonTree;
+        try {
+            jsonTree = HttpInterface.getDeviceTree();
+        } catch (UnsupportedEncodingException e1) {
+            e1.printStackTrace();
+            return false;
+        }
+//        JOptionPane.showMessageDialog(null, jsonTree.substring(0, 10));
         if (jsonTree == null || jsonTree.trim().length() == 0) {
             return false;
         }
         try {
             DefaultTreeModel dt = parseJsonTree(jsonTree);
             treePanel.setModel(dt);
+            expandAll(treePanel, new TreePath(treePanel.getModel().getRoot()));
         } catch (Exception e) {
             return false;
         }
         BufferedWriter bw = null;
         try {
-            bw = new BufferedWriter(new FileWriter(new File(configPath + "deviceTree.json")));
+            bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(configPath + "deviceTree.json"), "UTF-8"));
             bw.write(jsonTree);
         } catch (IOException e) {
             e.printStackTrace();
@@ -308,15 +322,24 @@ public class MainPanel extends JFrame {
             DefaultTreeModel dt = parseJsonTree(jsonTree);
             treePanel.setModel(dt);
         } catch (Exception e) {
-            return false;
+            DefaultTreeModel dt = new DefaultTreeModel(new DefaultMutableTreeNode("高清"));
+            treePanel.setModel(dt);
         }
         return true;
     }
 
     private DefaultTreeModel parseJsonTree(String jsonStr) throws JSONException {
         JSONArray topArr = new JSONArray(jsonStr);
-        DefaultMutableTreeNode root = new DefaultMutableTreeNode("根节点");
-        recursiveParse(topArr, root, null);
+        JSONArray hdArr = null;
+        for (int i = 0; i < topArr.length(); ++i) {
+            JSONObject obj = topArr.getJSONObject(i);
+            if (obj.getString("text").startsWith("高清")) {
+                hdArr = obj.getJSONArray("children");
+                break;
+            }
+        }
+        DefaultMutableTreeNode root = new DefaultMutableTreeNode("高清");
+        recursiveParse(hdArr, root, null);
         return new DefaultTreeModel(root);
     }
 
@@ -335,6 +358,19 @@ public class MainPanel extends JFrame {
                 father.add(new DefaultMutableTreeNode(fatName + name));
             }
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void expandAll(JTree tree, TreePath parent) {
+        TreeNode node = (TreeNode) parent.getLastPathComponent();
+        if (node.getChildCount() > 0) {
+            for (Enumeration<TreeNode> e = node.children(); e.hasMoreElements();) {
+                TreeNode n = e.nextElement();
+                TreePath path = parent.pathByAddingChild(n);
+                expandAll(tree, path);
+            }
+        }
+        tree.expandPath(parent);
     }
 
     private boolean isRunning(String lineName) {

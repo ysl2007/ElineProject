@@ -48,39 +48,39 @@ public class Train extends JFrame {
     private Thread            dryRunThread;
     private boolean           increaseTrain    = false;
 
-    private Container    container;
-    private JPanel       detParams;
-    private JPanel       center;
-    private JPanel       topPanel;
-    private JPanel       detection;
-    private JPanel       classPanel;
-    private JPanel       samplePanel;
-    private JPanel       buttonPanel;
-    private JPanel       actionPanel;
-    private JPanel       increasePanel;
-    private JPanel       dryRunPanel;
-    private JButton      getReady;
-    private JButton      featExtract;
-    private JButton      paramOpti;
-    private JButton      train;
-    private JButton      positiveDirBrowse;
-    private JButton      negativeDirBrowse;
-    private JButton      exit;
-    private JButton      dryRun;
-    private JButton      dryRunDirBrowse;
-    private JCheckBox    increase;
-    private JTextField   name;
-    private JTextField   var;
-    private JTextField   alpha;
-    private JTextField   minArea;
-    private JTextField   positiveDirField;
-    private JTextField   negativeDirField;
-    private JTextField   dryRunDate;
-    private JTextField   dryRunDir;
-    private ButtonGroup  btGroup;
-    private JProgressBar progressBar;
-    private JRadioButton towerCheck;
-    private JRadioButton diggerCheck;
+    private Container         container;
+    private JPanel            detParams;
+    private JPanel            center;
+    private JPanel            topPanel;
+    private JPanel            detection;
+    private JPanel            classPanel;
+    private JPanel            samplePanel;
+    private JPanel            buttonPanel;
+    private JPanel            actionPanel;
+    private JPanel            increasePanel;
+    private JPanel            dryRunPanel;
+    private JButton           getReady;
+    private JButton           featExtract;
+    private JButton           paramOpti;
+    private JButton           train;
+    private JButton           positiveDirBrowse;
+    private JButton           negativeDirBrowse;
+    private JButton           exit;
+    private JButton           dryRun;
+    private JButton           dryRunDirBrowse;
+    private JCheckBox         increase;
+    private JTextField        name;
+    private JTextField        var;
+    private JTextField        alpha;
+    private JTextField        minArea;
+    private JTextField        positiveDirField;
+    private JTextField        negativeDirField;
+    private JTextField        dryRunDate;
+    private JTextField        dryRunDir;
+    private ButtonGroup       btGroup;
+    private JProgressBar      progressBar;
+    private JRadioButton      towerCheck;
+    private JRadioButton      diggerCheck;
 
     public Train(String lineName) {
         JSONTokener tokener;
@@ -160,7 +160,7 @@ public class Train extends JFrame {
                 int returnVal = dirChooser.showOpenDialog(null);
                 if (returnVal == JFileChooser.APPROVE_OPTION) {
                     String selectedDir = dirChooser.getSelectedFile().getAbsolutePath();
-                    negativeDirField.setText(selectedDir);
+                    dryRunDir.setText(selectedDir);
                 }
             }
         });
@@ -515,6 +515,9 @@ public class Train extends JFrame {
 
     @Override
     public void dispose() {
+        if (tHelper.isOptiming()) {
+            JOptionPane.showConfirmDialog(null, "参数优化正在运行，无法退出。", "训练未完成", JOptionPane.ERROR_MESSAGE);
+        }
         if (tHelper != null && validateStatus(TrainHelper.MODEL_TRAINED) != 0) {
             int status = JOptionPane.showConfirmDialog(null, "训练尚未完成，如果关闭窗口，则会删除已有临时文件，是否继续？", "训练未完成",
                     JOptionPane.YES_NO_OPTION);
@@ -533,10 +536,11 @@ public class Train extends JFrame {
         }
     }
 
-    public void dryRunCallback(){
+    public void dryRunCallback() {
         JOptionPane.showMessageDialog(null, "空跑完成。", "完成", JOptionPane.PLAIN_MESSAGE);
     }
+
     public static void main(String[] args) {
-        new Train("line");
+        new Train("安都17(动态风险)");
     }
 }

@@ -121,7 +121,7 @@ public class HttpInterface {
         return bimg;
     }
 
-    public static String getDeviceTree() {
+    public static String getDeviceTree() throws UnsupportedEncodingException {
         String url = deviceUrl;
         String result = "";
         InputStream is;
@@ -132,7 +132,7 @@ public class HttpInterface {
             e.printStackTrace();
             return null;
         }
-        BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+        BufferedReader reader = new BufferedReader(new InputStreamReader(is, "UTF-8"));
         String line;
         try {
             while ((line = reader.readLine()) != null) {

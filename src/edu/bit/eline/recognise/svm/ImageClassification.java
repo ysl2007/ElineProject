@@ -86,7 +86,7 @@ public class ImageClassification implements Runnable {
             String trainArgs[] = args.split(" ");
             svm_train.main(trainArgs);
             return modelpath;
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             return null;
         }
@@ -146,6 +146,7 @@ public class ImageClassification implements Runnable {
                 double c = Math.pow(2, i);
                 double g = Math.pow(2, j);
                 String option = "-t 2 " + "-c " + Double.toString(c) + " -g " + Double.toString(g);
+                System.out.println(option);
                 train(option, trainpath, modelpath);
                 predict("-b 0", predictpath, modelpath, resultpath);
                 Evaluater eva = new Evaluater(classes, getLabels(resultpath), getLabels(predictpath));
