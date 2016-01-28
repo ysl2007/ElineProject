@@ -135,7 +135,7 @@ public class TrainHelper {
     }
 
     public boolean isOptiming() {
-        if (ic != null && paramOptiThread.isAlive()) {
+        if (paramOptiThread != null && paramOptiThread.isAlive()) {
             return true;
         }
         return false;

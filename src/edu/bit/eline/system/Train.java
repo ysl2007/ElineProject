@@ -147,8 +147,7 @@ public class Train extends JFrame {
         detection.add(Box.createHorizontalStrut(5));
 
         // Dry run
-        JLabel dryRunDirLabel = new JLabel("文件夹：");
-        dryRunDirLabel.setAlignmentX(LEFT_ALIGNMENT);
+        JLabel dryRunDirLabel = new JLabel("目标目录：");
         dryRunDir = new JTextField();
         dryRunDir.setColumns(14);
         dryRunDirBrowse = new JButton("浏览");
@@ -164,9 +163,12 @@ public class Train extends JFrame {
                 }
             }
         });
-
-        JLabel dryRunDateLabel = new JLabel("日期：");
-        dryRunDateLabel.setAlignmentX(LEFT_ALIGNMENT);
+        JPanel drDir = new JPanel();
+        drDir.add(dryRunDirLabel);
+        drDir.add(dryRunDir);
+        drDir.add(dryRunDirBrowse);
+        
+        JLabel dryRunDateLabel = new JLabel("空跑日期：");
         dryRunDate = new JTextField();
         dryRunDate.setColumns(14);
         dryRun = new JButton("运行");
@@ -176,36 +178,18 @@ public class Train extends JFrame {
                 dryRun(dryRunDir.getText(), dryRunDate.getText());
             }
         });
+        JPanel drRun = new JPanel();
+        drRun.setLayout(new FlowLayout());
+        drRun.add(dryRunDateLabel);
+        drRun.add(dryRunDate);
+        drRun.add(dryRun);
 
         dryRunPanel = new JPanel();
-        GridBagLayout dryRunLayout = new GridBagLayout();
         dryRunPanel.setPreferredSize(new Dimension(320, 95));
+        dryRunPanel.setLayout(new BoxLayout(dryRunPanel, BoxLayout.Y_AXIS));
         dryRunPanel.setBorder(BorderFactory.createTitledBorder("空跑"));
-        dryRunPanel.setLayout(dryRunLayout);
-        dryRunPanel.add(dryRunDirLabel);
-        dryRunPanel.add(dryRunDir);
-        dryRunPanel.add(dryRunDirBrowse);
-        dryRunPanel.add(dryRunDateLabel);
-        dryRunPanel.add(dryRunDate);
-        dryRunPanel.add(dryRun);
-
-        GridBagConstraints cons = new GridBagConstraints();
-        cons.gridx = 0;
-        cons.gridy = 0;
-        cons.anchor = GridBagConstraints.WEST;
-        cons.insets = new Insets(5, 5, 5, 5);
-        dryRunLayout.setConstraints(dryRunDirLabel, cons);
-        cons.gridx = 1;
-        dryRunLayout.setConstraints(dryRunDir, cons);
-        cons.gridx = 2;
-        dryRunLayout.setConstraints(dryRunDirBrowse, cons);
-        cons.gridx = 0;
-        cons.gridy = 1;
-        dryRunLayout.setConstraints(dryRunDateLabel, cons);
-        cons.gridx = 1;
-        dryRunLayout.setConstraints(dryRunDate, cons);
-        cons.gridx = 2;
-        dryRunLayout.setConstraints(dryRun, cons);
+        dryRunPanel.add(drDir);
+        dryRunPanel.add(drRun);
 
         // 异常类别部分
         CheckListener listener = new CheckListener();
@@ -299,6 +283,7 @@ public class Train extends JFrame {
 
         // 整个中部
         center = new JPanel();
+        GridBagConstraints cons = new GridBagConstraints();
         center.add(detection, cons);
         center.add(dryRunPanel);
         center.add(classPanel, cons);
@@ -515,7 +500,7 @@ public class Train extends JFrame {
 
     @Override
     public void dispose() {
-        if (tHelper.isOptiming()) {
+        if (tHelper != null && tHelper.isOptiming()) {
             JOptionPane.showConfirmDialog(null, "参数优化正在运行，无法退出。", "训练未完成", JOptionPane.ERROR_MESSAGE);
         }
         if (tHelper != null && validateStatus(TrainHelper.MODEL_TRAINED) != 0) {

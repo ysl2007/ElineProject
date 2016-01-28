@@ -1,5 +1,5 @@
 {
-    "config_root_path" : "e:\\config\\",
+    "config_root_path" : "E:\\部署\\config",
     "database_url" : "jdbc:sqlserver://10.156.121.47;databaseName=ElectVideoMonitorSys",
     "database_username" : "sa",
     "database_password" : "bit100081",
