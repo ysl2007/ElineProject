@@ -57,6 +57,8 @@ public class MainPanelDemo extends JFrame {
     private JButton     browseImg;
     private JButton     browseModel;
     private JButton     run;
+    private JButton     pause;
+    private JButton     resume;
     private JButton     setPauseTime;
     private JButton     stop;
     private Container   container;
@@ -77,7 +79,8 @@ public class MainPanelDemo extends JFrame {
         private ImageClassification ic;
         private Params              param;
         private int                 pauseTime;
-        private boolean             run = true;
+        private boolean             run   = true;
+        private boolean             pause = false;
 
         public Detection(Params param) {
             this.param = param;
@@ -89,7 +92,22 @@ public class MainPanelDemo extends JFrame {
         }
 
         public void stop() {
-            this.run = false;
+            synchronized (this) {
+                this.run = false;
+            }
+        }
+
+        public void pause() {
+            synchronized (this) {
+                this.pause = true;
+            }
+        }
+
+        public void resume() {
+            synchronized (this) {
+                pause = false;
+                notifyAll();
+            }
         }
 
         public void setPauseTime(float time) {
@@ -104,12 +122,20 @@ public class MainPanelDemo extends JFrame {
             }
             int i = 0;
             for (String imgFilename : param.imgList) {
-                if (run == false) {
-                    break;
+                synchronized (this) {
+                    if (run == false) {
+                        break;
+                    }
+                    if (pause) {
+                        try {
+                            this.wait();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
                 }
+
                 ++i;
-                fileName.setText(imgFilename);
-                numOfPics.setText(i + "/" + param.imgList.size());
                 BufferedImage bimg;
                 try {
                     bimg = ImageIO.read(new File(imgFilename));
@@ -139,6 +165,8 @@ public class MainPanelDemo extends JFrame {
                     }
                 }
                 BufferedImage imgProcessed = converter.convert2JavaImg(imgMat);
+                fileName.setText(imgFilename);
+                numOfPics.setText(i + "/" + param.imgList.size());
                 imagePanel.setImage(imgProcessed);
                 centerPanel.setViewportView(imagePanel);
                 imagePanel.setPreferredSize(new Dimension(imgProcessed.getWidth(), imgProcessed.getHeight()));
@@ -161,9 +189,9 @@ public class MainPanelDemo extends JFrame {
         container.setLayout(new BoxLayout(container, BoxLayout.Y_AXIS));
 
         // 左上角浏览文件夹部分
-        JLabel dirLabel = new JLabel("图片文件夹");
+        JLabel dirLabel = new JLabel("图片目录");
         dirField = new JTextField("e:\\example\\5");
-        dirField.setColumns(14);
+        dirField.setColumns(12);
         browseImg = new JButton("浏览");
         browseImg.addActionListener(new ActionListener() {
             @Override
@@ -172,9 +200,9 @@ public class MainPanelDemo extends JFrame {
             }
         });
 
-        JLabel modLabel = new JLabel("模型文件夹");
+        JLabel modLabel = new JLabel("模型目录");
         modelField = new JTextField();
-        modelField.setColumns(14);
+        modelField.setColumns(12);
         browseModel = new JButton("浏览");
         browseModel.addActionListener(new ActionListener() {
             @Override
@@ -216,22 +244,14 @@ public class MainPanelDemo extends JFrame {
         alpha.setText("0.1");
         alpha.setColumns(3);
         topMidArea.add(alpha);
-        topMidArea.add(new JLabel("最小识别面积"));
+        topMidArea.add(new JLabel("面积"));
         minArea = new JTextField();
         minArea.setText("4000");
         minArea.setColumns(4);
         topMidArea.add(minArea);
         topMidArea.setBorder(BorderFactory.createTitledBorder("参数"));
 
-        run = new JButton("运行");
-        run.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent arg0) {
-                runButtom();
-            }
-        });
-
-        JLabel pause = new JLabel("暂停时间");
+        JLabel pauseLabel = new JLabel("暂停时间");
         pauseTime = new JTextField();
         pauseTime.setText("1");
         pauseTime.setColumns(3);
@@ -246,6 +266,28 @@ public class MainPanelDemo extends JFrame {
                 detection.setPauseTime(Float.parseFloat(pauseTime.getText()));
             }
         });
+
+        run = new JButton("运行");
+        run.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent arg0) {
+                runButtom();
+            }
+        });
+        pause = new JButton("暂停");
+        pause.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                pauseButton();
+            }
+        });
+        resume = new JButton("继续");
+        resume.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                resumeButton();
+            }
+        });
         stop = new JButton("停止");
         stop.addActionListener(new ActionListener() {
             @Override
@@ -257,10 +299,12 @@ public class MainPanelDemo extends JFrame {
         topRight = new JPanel();
         topRight.setBorder(BorderFactory.createTitledBorder("运行"));
         topRight.setLayout(new FlowLayout());
-        topRight.add(pause);
+        topRight.add(pauseLabel);
         topRight.add(pauseTime);
         topRight.add(setPauseTime);
         topRight.add(run);
+        topRight.add(pause);
+        topRight.add(resume);
         topRight.add(stop);
 
         topPanel = new JPanel();
@@ -362,6 +406,14 @@ public class MainPanelDemo extends JFrame {
         varThrsh.setEditable(true);
         minArea.setEditable(true);
         alpha.setEditable(true);
+    }
+
+    private void pauseButton() {
+        detection.pause();
+    }
+
+    private void resumeButton() {
+        detection.resume();
     }
 
     private boolean paramInitialize(String rootDir) {
