@@ -52,6 +52,7 @@ public class ModelManager extends JFrame {
     private JScrollPane       cameraListController;
     private JScrollPane       modelListController;
 
+    // 读配置文件
     public ModelManager(TreeModel tree) {
         JSONTokener tokener;
         try {
@@ -188,6 +189,7 @@ public class ModelManager extends JFrame {
         finalSettings();
     }
 
+    // 删除模型
     private void deleteModel() {
         if (curSelectedModel == null || curSelectedModel.length() == 0) {
             JOptionPane.showMessageDialog(null, "没有选择任何模型", "没有选择模型", JOptionPane.WARNING_MESSAGE);

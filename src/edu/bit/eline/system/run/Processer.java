@@ -25,6 +25,7 @@ import edu.bit.eline.recognise.svm.ImageClassification;
 import edu.bit.eline.system.Params;
 
 public class Processer implements Runnable {
+    // 每条线路对应一个Detector图片分析处理对象，用map来标识每个线路，键为线路名，值为detector及对应参数
     private ConcurrentHashMap<String, Pair<Detector, Params>> detMap;
     private ImageStorage                                      store;
     private ImageConverter                                    converter;
@@ -43,6 +44,7 @@ public class Processer implements Runnable {
         analyzer = new BlobAnalyzer(4000);
     }
 
+    // 返回所有正在运行的线路，即map中所有键
     public List<String> getRunningLine() {
         synchronized (detMap) {
             Enumeration<String> e = detMap.keys();
@@ -54,30 +56,34 @@ public class Processer implements Runnable {
         }
     }
 
+    // 添加某一线路进入运行map中
     public void runLine(String lineName, Detector det, Params param) {
         synchronized (detMap) {
             detMap.put(lineName, new Pair<Detector, Params>(det, param));
         }
     }
 
+    // 停止某一线路
     public void stopLine(String lineName) {
         synchronized (detMap) {
             detMap.remove(lineName);
         }
     }
 
+    // 停止所有线路
     public void stopAll() {
         synchronized (detMap) {
             detMap.clear();
         }
     }
 
-    public Enumeration<String> getLines() {
-        synchronized (detMap) {
-            return detMap.keys();
-        }
-    }
+//    public Enumeration<String> getLines() {
+//        synchronized (detMap) {
+//            return detMap.keys();
+//        }
+//    }
 
+    // 判断某一条线路是否正在运行
     public boolean isRunning(String lineName) {
         if (detMap.containsKey(lineName)) {
             return true;
@@ -89,11 +95,13 @@ public class Processer implements Runnable {
     public void run() {
         dbconn = new SQLConnection();
         while (!Thread.interrupted()) {
+            // 获取图片
             Pair<String, Pair<String, BufferedImage>> pair = store.get();
             System.out.println("获取到新图片。");
             String lineName = pair.getKey();
             Pair<String, BufferedImage> imgPair = pair.getVal();
             String imgFilename = imgPair.getKey();
+            // 从文件名中解析日期时间文件名格式可见服务器中imagedata文件夹中的图片
             int timeBegIndex = imgFilename.indexOf("_") + 1;
             int timeMidIndex = imgFilename.indexOf("_", timeBegIndex);
             int timeEndIndex = imgFilename.indexOf("_", timeMidIndex + 1);
@@ -102,6 +110,7 @@ public class Processer implements Runnable {
             String time = imgFilename.substring(timeMidIndex + 1, timeEndIndex);
             time = time.substring(0, 2) + ":" + time.substring(2, 4) + ":" + time.substring(4, time.length());
             String datetime = date + " " + time;
+            // datetime格式：yyyy-mm-dd hh-mm-ss
             BufferedImage bimg = imgPair.getVal();
             Pair<Detector, Params> detPair;
             synchronized (detMap) {
@@ -110,6 +119,7 @@ public class Processer implements Runnable {
                 }
                 detPair = detMap.get(lineName);
             }
+            // 检测过程
             Detector det = detPair.getKey();
             Params param = detPair.getVal();
             Mat imgMat = converter.convert2Mat(bimg);
@@ -125,6 +135,7 @@ public class Processer implements Runnable {
                 String feature = featureExt.extractIMGfeature(subimg);
                 String label = classifier.classifyOneImg("4 " + feature, param.finalModelPath, param.scaleParamPath,
                         param.tempimgfeaturepath, param.tempscaleimgfeaturepath, param.tempimageresultpath);
+                // 检测到异常，存入数据库
                 if (!label.equals("0.0")) {
                     System.out.println("检测到异常。");
                     if (dbconn == null) {

@@ -16,6 +16,7 @@ import javax.swing.JProgressBar;
 import edu.bit.eline.system.TrainHelper;
 
 public class ImageClassification implements Runnable {
+    // 基本跟ExtractFeature相同
     private boolean      runFlag      = true;
     private boolean      folderStatus = false;
     private String       trainpath;
@@ -26,6 +27,7 @@ public class ImageClassification implements Runnable {
     private TrainHelper  callback;
     private JProgressBar proBar;
 
+    // 不是我写的，不要改
     public String generateTrainPredict(String sourcepath, int predictrate, String trainpath, String predictpath) {
         try {
             BufferedReader sourceFile = new BufferedReader(new FileReader(sourcepath));
@@ -56,6 +58,7 @@ public class ImageClassification implements Runnable {
         }
     }
 
+    // 不要改
     public String scaledata(String sfeaturepath, String dfeaturepath, Boolean saveflag, String paramfilepath) {
         String scaleArgs[];
         String args;
@@ -80,6 +83,7 @@ public class ImageClassification implements Runnable {
         }
     }
 
+    // 不要改
     public String train(String options, String sfeaturepath, String modelpath) {
         try {
             String args = options + " " + sfeaturepath + " " + modelpath;
@@ -92,6 +96,7 @@ public class ImageClassification implements Runnable {
         }
     }
 
+    // 不要改
     public String classifyOneImg(String imgfeatures, String modelpath, String paramfilepath, String sfeaturepath,
             String dfeaturepath, String resultpath) {
         String scaledpath = scaleOneImg(imgfeatures, paramfilepath, sfeaturepath, dfeaturepath);
@@ -111,6 +116,7 @@ public class ImageClassification implements Runnable {
         }
     }
 
+    // 各个文件夹
     public void setFolders(String trainpath, String modelpath, String predictpath, String resultpath,
             String[] classes) {
         this.trainpath = trainpath;
@@ -121,16 +127,18 @@ public class ImageClassification implements Runnable {
         this.folderStatus = true;
     }
 
+    // 界面回调
     public void setCallback(TrainHelper callback, JProgressBar proBar) {
         this.callback = callback;
         this.proBar = proBar;
     }
 
+    // 设置运行状态，用于停止运行
     public void setRunFlag(boolean flag) {
         this.runFlag = flag;
     }
 
-    // private methods
+    // private methods，不要改
     private String paramoptimize() {
         proBar.setMaximum(100);
         double bestCcandi = 0, bestGcandi = 0;

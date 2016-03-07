@@ -19,6 +19,11 @@ import edu.bit.eline.detection.Detector;
 import edu.bit.eline.detection.ImageConverter;
 import edu.bit.eline.system.Train;
 
+/**
+ * @author ysl
+ * 对某条线路进行dryrun以生成训练样本，即只对线路进行入侵无检测而不对入侵物进行分类识别。
+ * 并将所有监测到的入侵物保存到磁盘。
+ */
 public class DryRun implements Runnable {
     private String  lineName;
     private String  tgtPath;

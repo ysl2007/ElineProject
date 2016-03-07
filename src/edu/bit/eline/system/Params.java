@@ -11,7 +11,7 @@ import javax.swing.JOptionPane;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
-
+// 参数对象
 public class Params {
     private String configFile = "./config.json";
     public float   varThrshVal;
@@ -23,6 +23,7 @@ public class Params {
     public String  tempscaleimgfeaturepath;
     public String  tempimageresultpath;
 
+    // 读配置文件
     public Params(String lineName) throws IOException {
         JSONTokener tokener;
         try {
@@ -59,6 +60,7 @@ public class Params {
         reader.close();
     }
 
+    // 参数完整检查
     public boolean checkParams() {
         if (!new File(scaleParamPath).exists())
             return false;

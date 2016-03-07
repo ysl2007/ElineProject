@@ -38,6 +38,10 @@ import org.json.JSONTokener;
 
 import edu.bit.eline.system.run.DryRun;
 
+/**
+ * @author ysl 模型界面训练。每次训练将产生一个对应的TrainHelper完成训练的各个步骤。TrainHelper负责
+ *         调用ExtractFeature和ImageClassfication两个训练接口，创建对应的线程进行训练，并管理 各个步骤之间的状态。
+ */
 public class Train extends JFrame {
     private static final long serialVersionUID = 3541303824514014559L;
     private TrainHelper       tHelper;
@@ -48,39 +52,51 @@ public class Train extends JFrame {
     private Thread            dryRunThread;
     private boolean           increaseTrain    = false;
 
-    private Container         container;
-    private JPanel            detParams;
-    private JPanel            center;
-    private JPanel            topPanel;
-    private JPanel            detection;
-    private JPanel            classPanel;
-    private JPanel            samplePanel;
-    private JPanel            buttonPanel;
-    private JPanel            actionPanel;
-    private JPanel            increasePanel;
-    private JPanel            dryRunPanel;
-    private JButton           getReady;
-    private JButton           featExtract;
-    private JButton           paramOpti;
-    private JButton           train;
-    private JButton           positiveDirBrowse;
-    private JButton           negativeDirBrowse;
-    private JButton           exit;
-    private JButton           dryRun;
-    private JButton           dryRunDirBrowse;
-    private JCheckBox         increase;
-    private JTextField        name;
-    private JTextField        var;
-    private JTextField        alpha;
-    private JTextField        minArea;
-    private JTextField        positiveDirField;
-    private JTextField        negativeDirField;
-    private JTextField        dryRunDate;
-    private JTextField        dryRunDir;
-    private ButtonGroup       btGroup;
-    private JProgressBar      progressBar;
-    private JRadioButton      towerCheck;
-    private JRadioButton      diggerCheck;
+    private Container    container;
+    private JPanel       detParams;
+    private JPanel       center;
+    private JPanel       topPanel;
+    private JPanel       detection;
+    private JPanel       classPanel;
+    private JPanel       samplePanel;
+    private JPanel       buttonPanel;
+    private JPanel       actionPanel;
+    private JPanel       increasePanel;
+    private JPanel       dryRunPanel;
+    private JButton      getReady;
+    private JButton      featExtract;
+    private JButton      paramOpti;
+    private JButton      train;
+    private JButton      positiveDirBrowse;
+    private JButton      negativeDirBrowse;
+    private JButton      exit;
+    private JButton      dryRun;
+    private JButton      dryRunDirBrowse;
+    private JCheckBox    increase;
+    private JTextField   name;
+    private JTextField   var;
+    private JTextField   alpha;
+    private JTextField   minArea;
+    private JTextField   positiveDirField;
+    private JTextField   negativeDirField;
+    private JTextField   dryRunDate;
+    private JTextField   dryRunDir;
+    private ButtonGroup  btGroup;
+    private JProgressBar progressBar;
+    private JRadioButton towerCheck;
+    private JRadioButton diggerCheck;
+
+    class CheckListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (towerCheck.isSelected())
+                selectedClass = "1.0";
+            else if (diggerCheck.isSelected())
+                selectedClass = "2.0";
+            else
+                selectedClass = null;
+        }
+    }
 
     public Train(String lineName) {
         JSONTokener tokener;
@@ -103,18 +119,43 @@ public class Train extends JFrame {
         finalSettings();
     }
 
-    class CheckListener implements ActionListener {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            if (towerCheck.isSelected())
-                selectedClass = "1.0";
-            else if (diggerCheck.isSelected())
-                selectedClass = "2.0";
-            else
-                selectedClass = null;
+    // 关闭界面
+    @Override
+    public void dispose() {
+        // 特征提取和参数优化过程中不允许退出
+        if (tHelper != null && tHelper.isExtracting()) {
+            JOptionPane.showConfirmDialog(null, "特征提起正在运行，无法退出。", "训练未完成", JOptionPane.ERROR_MESSAGE);
+        }
+        if (tHelper != null && tHelper.isOptiming()) {
+            JOptionPane.showConfirmDialog(null, "参数优化正在运行，无法退出。", "训练未完成", JOptionPane.ERROR_MESSAGE);
+        }
+        // 如果训练过程整体未完成，则发出提示
+        if (tHelper != null && validateStatus(TrainHelper.MODEL_TRAINED) != 0) {
+            int status = JOptionPane.showConfirmDialog(null, "训练尚未完成，如果关闭窗口，则会删除已有临时文件，是否继续？", "训练未完成",
+                    JOptionPane.YES_NO_OPTION);
+            // 确认后，删除所有临时文件
+            if (status == JOptionPane.YES_OPTION) {
+                tHelper.stopThread();
+                Utils.delete(new File(rootPath + "/models/" + name.getText()));
+                super.dispose();
+            } else {
+                return;
+            }
+            // 打断干跑过程
+        } else {
+            if (dryRunThread != null && dryRunThread.isAlive()) {
+                dr.stopRun();
+            }
+            super.dispose();
         }
     }
 
+    // 干跑回调，用于界面提示。
+    public void dryRunCallback() {
+        JOptionPane.showMessageDialog(null, "空跑完成。", "完成", JOptionPane.PLAIN_MESSAGE);
+    }
+
+    // private methods
     private void setupGUI(String lineName) {
         // detection参数部分
         detParams = new JPanel();
@@ -167,7 +208,7 @@ public class Train extends JFrame {
         drDir.add(dryRunDirLabel);
         drDir.add(dryRunDir);
         drDir.add(dryRunDirBrowse);
-        
+
         JLabel dryRunDateLabel = new JLabel("空跑日期：");
         dryRunDate = new JTextField();
         dryRunDate.setColumns(14);
@@ -403,6 +444,8 @@ public class Train extends JFrame {
         container.add(topPanel);
     }
 
+    // dryRun按钮
+    // 干跑以生成训练样本，只进行检测过程，将入侵物直接保存到磁盘
     private void dryRun(String tgtDir, String date) {
         dr = new DryRun(name.getText(), tgtDir, date);
         dr.setCallBack(this);
@@ -410,7 +453,10 @@ public class Train extends JFrame {
         dryRunThread.start();
     }
 
+    // 准备训练，新建所有需要的文件夹，检查界面中所有项目是否完整。
+    // 准备训练，获取参数，新建文件夹
     private void getReady() {
+        // 检查界面
         name.setEditable(false);
         String lineName = name.getText();
         if (lineName == null || lineName.length() == 0) {
@@ -428,14 +474,19 @@ public class Train extends JFrame {
             JOptionPane.showMessageDialog(null, "没有选择样本路径。", "错误", JOptionPane.ERROR_MESSAGE);
             return;
         }
+        // 新建TrainHelper对象
         tHelper = new TrainHelper(lineName, selectedClass, posPath, negPath);
         tHelper.getDirsReady();
+        // 检查状态是否完成
         if (validateStatus(TrainHelper.DIRS_READY) == 0) {
             JOptionPane.showMessageDialog(null, "训练准备完成！", "成功", JOptionPane.INFORMATION_MESSAGE);
         }
     }
 
+    // 特征提取
+    // 特征提取
     private void featureExtract() {
+        // 检查状态
         if (validateStatus(TrainHelper.DIRS_READY) == -1) {
             JOptionPane.showMessageDialog(null, "前一步骤尚未完成！", "错误", JOptionPane.ERROR_MESSAGE);
             return;
@@ -443,7 +494,10 @@ public class Train extends JFrame {
         tHelper.featureExtract(progressBar, increaseTrain);
     }
 
+    // 参数优化
+    // 参数优化
     private void optiParams() {
+        // 检查状态
         if (validateStatus(TrainHelper.FEATURES_EXTRACTED) == -1) {
             JOptionPane.showMessageDialog(null, "前一步骤尚未完成！", "错误", JOptionPane.ERROR_MESSAGE);
             return;
@@ -451,6 +505,8 @@ public class Train extends JFrame {
         tHelper.optiParams(progressBar);
     }
 
+    // 训练
+    // 训练
     private void train() {
         if (validateStatus(TrainHelper.PARAMS_OPTIMIZED) == -1) {
             JOptionPane.showMessageDialog(null, "前一步骤尚未完成！", "错误", JOptionPane.ERROR_MESSAGE);
@@ -476,6 +532,9 @@ public class Train extends JFrame {
         }
     }
 
+    // 检查trainHelper的状态，参数为所需要达到的状态。如果当前状态在需要达到的状态之前，
+    // 则返回-1，如果当前状态在需要达到的状态之后则返回1，如果满足当前需要的状态则返回0
+    // 状态检查
     private int validateStatus(int status) {
         if (tHelper == null)
             return -1;
@@ -498,34 +557,7 @@ public class Train extends JFrame {
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
     }
 
-    @Override
-    public void dispose() {
-        if (tHelper != null && tHelper.isOptiming()) {
-            JOptionPane.showConfirmDialog(null, "参数优化正在运行，无法退出。", "训练未完成", JOptionPane.ERROR_MESSAGE);
-        }
-        if (tHelper != null && validateStatus(TrainHelper.MODEL_TRAINED) != 0) {
-            int status = JOptionPane.showConfirmDialog(null, "训练尚未完成，如果关闭窗口，则会删除已有临时文件，是否继续？", "训练未完成",
-                    JOptionPane.YES_NO_OPTION);
-            if (status == JOptionPane.YES_OPTION) {
-                tHelper.stopThread();
-                Utils.delete(new File(rootPath + "/models/" + name.getText()));
-                super.dispose();
-            } else {
-                return;
-            }
-        } else {
-            if (dryRunThread != null && dryRunThread.isAlive()) {
-                dr.stopRun();
-            }
-            super.dispose();
-        }
-    }
-
-    public void dryRunCallback() {
-        JOptionPane.showMessageDialog(null, "空跑完成。", "完成", JOptionPane.PLAIN_MESSAGE);
-    }
-
     public static void main(String[] args) {
-        new Train("安都17(动态风险)");
+        new Train("");
     }
 }

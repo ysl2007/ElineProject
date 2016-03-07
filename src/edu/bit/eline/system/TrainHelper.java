@@ -17,39 +17,40 @@ import edu.bit.eline.recognise.feature.ExtractFeature;
 import edu.bit.eline.recognise.svm.ImageClassification;
 
 public class TrainHelper {
-    public static final int     NOT_INITIALIZED    = -1;
-    public static final int     INITIALIZED        = 0;
-    public static final int     DIRS_READY         = 1;
-    public static final int     FEATURES_EXTRACTED = 2;
-    public static final int     PARAMS_OPTIMIZED   = 3;
-    public static final int     MODEL_TRAINED      = 4;
+    // 状态指示
+    public static final int NOT_INITIALIZED    = -1;
+    public static final int INITIALIZED        = 0;
+    public static final int DIRS_READY         = 1;
+    public static final int FEATURES_EXTRACTED = 2;
+    public static final int PARAMS_OPTIMIZED   = 3;
+    public static final int MODEL_TRAINED      = 4;
 
-    private final String        configFile         = "./config.json";
-    private String              lineName;
-    private String              modelPath;
-    private String              tempPath;
-    private String              featPath;
-    private String              posPath;
-    private String              negPath;
+    private final String configFile = "./config.json";
+    private String       lineName;
+    private String       modelPath;
+    private String       tempPath;
+    private String       featPath;
+    private String       posPath;
+    private String       negPath;
 
-    private String              tempoptmodelpath;
-    private String              tempoptresultpath;
-    private String              featurepath;
-    private String              scaleparamspath;
-    private String              scalefeaturepath;
-    private String              trainfeaturepath;
-    private String              predictfeaturepath;
-    private String              finalmodelpath;
+    private String tempoptmodelpath;
+    private String tempoptresultpath;
+    private String featurepath;
+    private String scaleparamspath;
+    private String scalefeaturepath;
+    private String trainfeaturepath;
+    private String predictfeaturepath;
+    private String finalmodelpath;
 
     private ExtractFeature      ef;
     private ImageClassification ic;
     private double              c;
     private double              g;
-    private String[]            classes            = { "0.0", "0.0" };
-    private int                 status             = NOT_INITIALIZED;
+    private String[]            classes         = { "0.0", "0.0" };
+    private int                 status          = NOT_INITIALIZED;
     private String              optiResult;
-    private Thread              featExtThread      = null;
-    private Thread              paramOptiThread    = null;
+    private Thread              featExtThread   = null;
+    private Thread              paramOptiThread = null;
 
     public TrainHelper(String lineName, String posClass, String posPath, String negPath) {
         JSONTokener tokener;
@@ -70,6 +71,7 @@ public class TrainHelper {
             return;
         }
 
+        // 文件、文件名参数初始化
         modelPath = rootPath + "\\models\\" + lineName + "\\";
         tempPath = modelPath + "temp" + "\\";
         featPath = modelPath + "features" + "\\";
@@ -95,6 +97,7 @@ public class TrainHelper {
         return status;
     }
 
+    // 准备训练，建立所有需要的文件夹
     public void getDirsReady() {
         File dir;
         dir = new File(modelPath);
@@ -109,6 +112,7 @@ public class TrainHelper {
         status = DIRS_READY;
     }
 
+    // 特征提取
     public void featureExtract(JProgressBar proBar, boolean increaseTrain) {
         if (featExtThread == null || featExtThread.isAlive() == false) {
             ef = new ExtractFeature(lineName, classes[1], proBar, increaseTrain);
@@ -121,6 +125,7 @@ public class TrainHelper {
         }
     }
 
+    // 参数优化
     public void optiParams(JProgressBar proBar) {
         if (paramOptiThread == null || paramOptiThread.isAlive() == false) {
             ic.scaledata(featurepath, scalefeaturepath, true, scaleparamspath);
@@ -134,6 +139,7 @@ public class TrainHelper {
         }
     }
 
+    // 判断参数优化过程是否正在运行
     public boolean isOptiming() {
         if (paramOptiThread != null && paramOptiThread.isAlive()) {
             return true;
@@ -141,6 +147,15 @@ public class TrainHelper {
         return false;
     }
 
+    // 判断特征提取过程是否正在运行
+    public boolean isExtracting() {
+        if (featExtThread != null && featExtThread.isAlive()) {
+            return true;
+        }
+        return false;
+    }
+
+    // 训练
     public void train(String recogParam) throws IOException {
         String params = "-t 2 -c " + c + " -g " + g;
         ic.train(params, scalefeaturepath, finalmodelpath);
@@ -150,12 +165,14 @@ public class TrainHelper {
         status = MODEL_TRAINED;
     }
 
+    // 特征提取回调，界面显示、设置状态
     public void featExtrCallback(int status, JProgressBar proBar) {
         this.status = status;
         JOptionPane.showMessageDialog(null, "特征提取过程完成！", "成功", JOptionPane.INFORMATION_MESSAGE);
         proBar.setValue(0);
     }
 
+    // 参数优化回调，获取优化结果、设置状态、界面显示
     public void optiCallBack(String result, int status, JProgressBar proBar) {
         this.optiResult = result;
         this.status = status;
@@ -169,6 +186,7 @@ public class TrainHelper {
         proBar.setValue(0);
     }
 
+    // 停止运行
     public void stopThread() {
         if (ef != null) {
             ef.setRunFlag(false);

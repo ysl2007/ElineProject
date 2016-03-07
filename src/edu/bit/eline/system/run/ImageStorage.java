@@ -6,6 +6,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 public class ImageStorage {
     private ConcurrentLinkedQueue<Pair<String, Pair<String, BufferedImage>>> imgQueue;
 
+    // 使用队列存储未处理图片
     public ImageStorage() {
         imgQueue = new ConcurrentLinkedQueue<Pair<String, Pair<String, BufferedImage>>>();
     }

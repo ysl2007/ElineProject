@@ -19,6 +19,7 @@ public class HttpInterface {
     private static final String imgUrl     = "http://10.156.118.5/gwzd/ImageService.do?action=getImageDataByFileName&FileName=";
     private static final String deviceUrl  = "http://10.156.118.5/gwzd/TreeService.do?action=getTreeNew";
 
+    // 两次编码
     private static String encodeTwice(String str) throws UnsupportedEncodingException {
         String _str;
         _str = URLEncoder.encode(str, "UTF-8");
@@ -27,6 +28,7 @@ public class HttpInterface {
         return _str;
     }
 
+    // 一次编码
     private static String encodeOnce(String str) throws UnsupportedEncodingException {
         String _str;
         _str = URLEncoder.encode(str, "UTF-8");
@@ -34,6 +36,7 @@ public class HttpInterface {
         return _str;
     }
 
+    // 网络接口连接
     private static InputStream connect(String url) throws IOException {
         URL realUrl = new URL(url);
         URLConnection connection = realUrl.openConnection();
@@ -49,10 +52,12 @@ public class HttpInterface {
         return connection.getInputStream();
     }
 
+    // 获取某时间段图片列表
     public static List<String> getImageList(String lineName, String start, String end) {
         List<String> imageList = new ArrayList<String>();
         String result = "";
         InputStream is;
+        // 由于对方接口的原因，必须对中文线路名进行两次URL编码，对起止时间进行一次编码。
         try {
             lineName = encodeTwice(lineName);
             start = encodeOnce(start);
@@ -61,12 +66,14 @@ public class HttpInterface {
             is = connect(url);
 
         } catch (Exception e) {
+            System.err.println("获取图片路径列表异常");
             e.printStackTrace();
             return imageList;
         }
         BufferedReader reader = new BufferedReader(new InputStreamReader(is));
         String line;
         try {
+            // 不出错的话，返回结果应该只有1行。
             while ((line = reader.readLine()) != null) {
                 result += line;
             }
@@ -83,6 +90,7 @@ public class HttpInterface {
             }
         }
 
+        // 解析结果，返回图片路径列表
         if (result.length() == 0 || result.startsWith("null") || result.startsWith("[]")) {
             return imageList;
         }
@@ -95,11 +103,11 @@ public class HttpInterface {
         return imageList;
     }
 
+    // 提供图片路径，获取图片
     public static BufferedImage getImage(String imagePath) {
         try {
             imagePath = encodeOnce(imagePath);
         } catch (UnsupportedEncodingException e2) {
-            System.out.println("encode error");
             e2.printStackTrace();
         }
         String url = imgUrl + imagePath;
@@ -108,19 +116,20 @@ public class HttpInterface {
         try {
             is = connect(url);
         } catch (IOException e1) {
-            System.out.println("connect error");
+            System.err.println("图片下载连接异常");
             e1.printStackTrace();
             return bimg;
         }
         try {
             bimg = ImageIO.read(is);
         } catch (IOException e) {
-            System.out.println("reading error");
+            System.err.println("图片读取异常");
             e.printStackTrace();
         }
         return bimg;
     }
 
+    // 获取设备树
     public static String getDeviceTree() throws UnsupportedEncodingException {
         String url = deviceUrl;
         String result = "";
@@ -128,7 +137,7 @@ public class HttpInterface {
         try {
             is = connect(url);
         } catch (Exception e) {
-            System.out.println("发送GET请求出现异常！" + e);
+            System.err.println("获取设备树异常" + e);
             e.printStackTrace();
             return null;
         }

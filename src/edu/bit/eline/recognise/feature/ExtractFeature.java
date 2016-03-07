@@ -27,26 +27,41 @@ import net.semanticmetadata.lire.imageanalysis.ScalableColor;
 import net.semanticmetadata.lire.imageanalysis.Tamura;
 
 public class ExtractFeature implements Runnable {
+    // 正例样本路径
     private String       posPath;
+    // 负例样本路径
     private String       negPath;
+    // 特征提取结果输出文件
     private String       featurefilepath;
+    // 线路名
     private String       lineName;
+    // 运行标志
     private boolean      runFlag      = true;
+    // 增量学习标志
     private boolean      increase     = false;
+    // 文件夹设置标志
     private boolean      folderStatus = false;
+    // 正例类别
     private char         posClass;
-    private TrainHelper  th;
+    // 界面回调对象
+    private TrainHelper  callback;
+    // 界面进度条
     private JProgressBar proBar;
 
     public ExtractFeature() {}
 
     public ExtractFeature(String lineName, String pos, JProgressBar proBar, boolean increase) {
+        // 异常类别代号
         this.posClass = pos.charAt(0);
+        // 界面进度条
         this.proBar = proBar;
+        // 是否进行增量训练标志
         this.increase = increase;
+        // 线路名称
         this.lineName = lineName;
     }
 
+    // 设置所有文件夹。只有文件夹状态为true才可以进行特征提取步骤
     public void setFolders(String posPath, String negPath, String featurefilepath) {
         this.posPath = posPath;
         this.negPath = negPath;
@@ -54,15 +69,17 @@ public class ExtractFeature implements Runnable {
         this.folderStatus = true;
     }
 
+    // 设置运行标志，将变量设置为false可以停止该线程运行
     public void setRunFlag(boolean status) {
         runFlag = status;
     }
 
+    // 设置界面回调对象，回调用于设置训练状态以及界面提示提取完成
     public void setCallback(TrainHelper th) {
-        this.th = th;
+        this.callback = th;
     }
 
-    // 提取一个图像的特征
+    // 提供图片，提取该图像的特征
     public String extractIMGfeature(BufferedImage subimg) {
         AutoColorCorrelogram ac = new AutoColorCorrelogram();
         CEDD cd = new CEDD();
@@ -94,7 +111,8 @@ public class ExtractFeature implements Runnable {
         }
     }
 
-    // 提取一个图像的特征
+    // 提供文件夹路径，提取路径中每个图像的特征
+    // 这两个提特征的方法不是我写的，不要改
     public String extractIMGfeature(String filepath) {
         AutoColorCorrelogram ac = new AutoColorCorrelogram();
         CEDD cd = new CEDD();
@@ -130,7 +148,7 @@ public class ExtractFeature implements Runnable {
 
     @Override
     public void run() {
-        if (!folderStatus || th == null) {
+        if (!folderStatus || callback == null) {
             return;
         }
         BufferedWriter outFile = null;
@@ -151,9 +169,10 @@ public class ExtractFeature implements Runnable {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        th.featExtrCallback(TrainHelper.FEATURES_EXTRACTED, proBar);
+        callback.featExtrCallback(TrainHelper.FEATURES_EXTRACTED, proBar);
     }
 
+    // private methods，以下方法不要改动
     private String[] getImgFilelist(String foldpath) {
         List<String> list = new ArrayList<String>();
         File dir = new File(foldpath);

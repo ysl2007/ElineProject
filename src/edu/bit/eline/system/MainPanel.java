@@ -79,6 +79,7 @@ public class MainPanel extends JFrame {
     private JButton           stopAll;
     private JScrollPane       treeController;
 
+    // JTree渲染对象，对JTree节点进行颜色标注
     class TreeCellRenderer extends DefaultTreeCellRenderer {
         private static final long serialVersionUID = -8890987966973311991L;
 
@@ -100,17 +101,19 @@ public class MainPanel extends JFrame {
     }
 
     public MainPanel() throws FileNotFoundException {
-        // 配置文件
+        // 读取配置文件
         JSONTokener tokener = new JSONTokener(new FileReader(configFile));
         JSONObject jo = new JSONObject(tokener);
         configPath = jo.getString("config_root_path");
         configPath += "/";
 
+        // 初始化图片容器、生产者消费者线程、主界面
         storage = new ImageStorage();
         processer = new Processer(storage);
         setupGUI();
         imgProvider = new ImageProvider(storage, processer);
 
+        // 使用生产者消费者模式开启两个线程
         new Thread(imgProvider).start();
         new Thread(processer).start();
     }
@@ -280,7 +283,8 @@ public class MainPanel extends JFrame {
         finalSettings();
     }
 
-    protected boolean getCameraTreeFromWeb() {
+    // 使用网络接口获取设备树
+    private boolean getCameraTreeFromWeb() {
         String jsonTree;
         try {
             jsonTree = HttpInterface.getDeviceTree();
@@ -299,6 +303,7 @@ public class MainPanel extends JFrame {
         } catch (Exception e) {
             return false;
         }
+        // 更新本地设备树文件
         BufferedWriter bw = null;
         try {
             bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(configPath + "deviceTree.json"), "UTF-8"));
@@ -315,6 +320,7 @@ public class MainPanel extends JFrame {
         return true;
     }
 
+    // 从本地文件获取设备树
     private boolean getCameraTreeFromFile() {
         try (BufferedReader br = new BufferedReader(
                 new InputStreamReader(new FileInputStream(configPath + "deviceTree.json"), "utf-8"))) {
@@ -328,6 +334,7 @@ public class MainPanel extends JFrame {
         return true;
     }
 
+    // 解析设备树JSON文件
     private DefaultTreeModel parseJsonTree(String jsonStr) throws JSONException {
         JSONArray topArr = new JSONArray(jsonStr);
         JSONArray hdArr = null;
@@ -343,6 +350,7 @@ public class MainPanel extends JFrame {
         return new DefaultTreeModel(root);
     }
 
+    // 递归调用解析JSON
     private void recursiveParse(JSONArray arr, DefaultMutableTreeNode father, String fatName) throws JSONException {
         for (int i = 0; i < arr.length(); ++i) {
             JSONObject obj = arr.getJSONObject(i);
@@ -360,6 +368,7 @@ public class MainPanel extends JFrame {
         }
     }
 
+    // 展开设备树
     @SuppressWarnings("unchecked")
     private void expandAll(JTree tree, TreePath parent) {
         TreeNode node = (TreeNode) parent.getLastPathComponent();
@@ -373,10 +382,12 @@ public class MainPanel extends JFrame {
         tree.expandPath(parent);
     }
 
+    // 判断线路是否正在运行
     private boolean isRunning(String lineName) {
         return processer.isRunning(lineName);
     }
 
+    // 初始化运行参数
     private Params initRunner(String lineName, boolean quiet) {
         String modelPath = configPath + "/models/" + lineName;
         if (!(new File(modelPath).exists())) {
@@ -404,19 +415,23 @@ public class MainPanel extends JFrame {
         return param;
     }
 
+    // 运行按钮
     private void runLine(String lineName, Params param) {
         Detector det = new Detector(0, param.varThrshVal);
         processer.runLine(lineName, det, param);
     }
 
+    // 停止按钮
     private void stopLine(String lineName) {
         processer.stopLine(lineName);
     }
 
+    // 停止所有线路
     private void stopAll() {
         processer.stopAll();
     }
 
+    // 获取所有线路（叶子节点）
     private List<String> getAllLeaf(DefaultMutableTreeNode tree) {
         ArrayList<String> retList = new ArrayList<String>();
         Stack<DefaultMutableTreeNode> stack = new Stack<DefaultMutableTreeNode>();
