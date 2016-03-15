@@ -40,7 +40,7 @@ import edu.bit.eline.system.run.DryRun;
 
 /**
  * @author ysl 模型界面训练。每次训练将产生一个对应的TrainHelper完成训练的各个步骤。TrainHelper负责
- *         调用ExtractFeature和ImageClassfication两个训练接口，创建对应的线程进行训练，并管理 各个步骤之间的状态。
+ *         调用ExtractFeature和ImageClassfication两个训练接口，创建对应的线程进行训练，并管理各个步骤之间的状态。
  */
 public class Train extends JFrame {
     private static final long serialVersionUID = 3541303824514014559L;
@@ -454,7 +454,6 @@ public class Train extends JFrame {
     }
 
     // 准备训练，新建所有需要的文件夹，检查界面中所有项目是否完整。
-    // 准备训练，获取参数，新建文件夹
     private void getReady() {
         // 检查界面
         name.setEditable(false);
@@ -484,7 +483,6 @@ public class Train extends JFrame {
     }
 
     // 特征提取
-    // 特征提取
     private void featureExtract() {
         // 检查状态
         if (validateStatus(TrainHelper.DIRS_READY) == -1) {
@@ -495,7 +493,6 @@ public class Train extends JFrame {
     }
 
     // 参数优化
-    // 参数优化
     private void optiParams() {
         // 检查状态
         if (validateStatus(TrainHelper.FEATURES_EXTRACTED) == -1) {
@@ -505,7 +502,6 @@ public class Train extends JFrame {
         tHelper.optiParams(progressBar);
     }
 
-    // 训练
     // 训练
     private void train() {
         if (validateStatus(TrainHelper.PARAMS_OPTIMIZED) == -1) {
