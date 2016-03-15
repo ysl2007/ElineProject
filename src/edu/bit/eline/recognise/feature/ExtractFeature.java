@@ -62,6 +62,7 @@ public class ExtractFeature implements Runnable {
     }
 
     // 设置所有文件夹。只有文件夹状态为true才可以进行特征提取步骤
+    // 两个path是训练样本目录
     public void setFolders(String posPath, String negPath, String featurefilepath) {
         this.posPath = posPath;
         this.negPath = negPath;
@@ -80,6 +81,7 @@ public class ExtractFeature implements Runnable {
     }
 
     // 提供图片，提取该图像的特征
+    // 不要改
     public String extractIMGfeature(BufferedImage subimg) {
         AutoColorCorrelogram ac = new AutoColorCorrelogram();
         CEDD cd = new CEDD();
