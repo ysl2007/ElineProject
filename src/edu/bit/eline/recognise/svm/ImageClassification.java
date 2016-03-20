@@ -11,20 +11,7 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.JProgressBar;
-
-import edu.bit.eline.system.TrainHelper;
-
-public class ImageClassification implements Runnable {
-    private boolean      runFlag      = true;
-    private boolean      folderStatus = false;
-    private String       trainpath;
-    private String       modelpath;
-    private String       predictpath;
-    private String       resultpath;
-    private String[]     classes;
-    private TrainHelper  callback;
-    private JProgressBar proBar;
+public class ImageClassification {
 
     public String generateTrainPredict(String sourcepath, int predictrate, String trainpath, String predictpath) {
         try {
@@ -100,82 +87,7 @@ public class ImageClassification implements Runnable {
         return label1[0];
     }
 
-    @Override
-    public void run() {
-        if (!(runFlag && folderStatus)) {
-            return;
-        }
-        String result = paramoptimize();
-        if (result != null) {
-            callback.optiCallBack(result, TrainHelper.PARAMS_OPTIMIZED, proBar);
-        }
-    }
-
-    public void setFolders(String trainpath, String modelpath, String predictpath, String resultpath,
-            String[] classes) {
-        this.trainpath = trainpath;
-        this.modelpath = modelpath;
-        this.predictpath = predictpath;
-        this.resultpath = resultpath;
-        this.classes = classes;
-        this.folderStatus = true;
-    }
-
-    public void setCallback(TrainHelper callback, JProgressBar proBar) {
-        this.callback = callback;
-        this.proBar = proBar;
-    }
-
-    public void setRunFlag(boolean flag) {
-        this.runFlag = flag;
-    }
-
     // private methods
-    private String paramoptimize() {
-        proBar.setMaximum(100);
-        double bestCcandi = 0, bestGcandi = 0;
-        // double bestrec = 0;
-        double bestacc = 0, bestc = 0, bestg = 0;
-        int stage = 0;
-        for (int i = -2; i <= 2; i++) {
-            for (int j = -10; j <= 10; j++) {
-                if (!runFlag) {
-                    return null;
-                }
-                System.out.println("opti: i=" + i + " j=" + j);
-                double c = Math.pow(2, i);
-                double g = Math.pow(2, j);
-                String option = "-t 2 " + "-c " + Double.toString(c) + " -g " + Double.toString(g);
-                train(option, trainpath, modelpath);
-                predict("-b 0", predictpath, modelpath, resultpath);
-                Evaluater eva = new Evaluater(classes, getLabels(resultpath), getLabels(predictpath));
-                double acc = eva.getAccuracy();
-                if (acc > bestacc) {
-                    bestc = c;
-                    bestg = g;
-                }
-                // double rec = eva.getRecall();
-                // if (acc >= bestacc && rec >= bestrec){
-                // bestCcandi = c;
-                // bestGcandi = g;
-                // }
-                // if (acc > 0.5 && rec > bestrec) {
-                // bestacc = acc;
-                // bestrec = rec;
-                // bestc = c;
-                // bestg = g;
-                // }
-                ++stage;
-                System.out.println((int) ((float) stage / 105 * 100));
-                proBar.setValue((int) ((float) stage / 105 * 100));
-            }
-        }
-        bestc = bestc == 0 ? bestCcandi : bestc;
-        bestg = bestg == 0 ? bestGcandi : bestg;
-        return "Best C: " + Double.toString(bestc) + " Best G: " + Double.toString(bestg) + " Best Acc: "
-                + Double.toString(bestacc);
-    }
-
     private String[] getLabels(String resultpath) {
         try {
             BufferedReader sourceFile = new BufferedReader(new FileReader(resultpath));
