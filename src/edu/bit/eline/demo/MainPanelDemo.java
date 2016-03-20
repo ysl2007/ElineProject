@@ -190,7 +190,7 @@ public class MainPanelDemo extends JFrame {
 
         // 左上角浏览文件夹部分
         JLabel dirLabel = new JLabel("图片目录");
-        dirField = new JTextField("e:\\example\\5");
+        dirField = new JTextField();
         dirField.setColumns(12);
         browseImg = new JButton("浏览");
         browseImg.addActionListener(new ActionListener() {
@@ -437,7 +437,7 @@ public class MainPanelDemo extends JFrame {
     private void finalSettings() {
         this.setContentPane(container);
         setSize(1300, 855);
-        setTitle("Demo");
+        setTitle("演示程序");
         setVisible(true);
         setResizable(true);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

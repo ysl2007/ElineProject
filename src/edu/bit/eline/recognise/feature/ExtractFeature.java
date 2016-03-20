@@ -1,18 +1,13 @@
 package edu.bit.eline.recognise.feature;
 
 import java.awt.image.BufferedImage;
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.FilenameFilter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.imageio.ImageIO;
-import javax.swing.JProgressBar;
 
-import edu.bit.eline.system.TrainHelper;
 import net.semanticmetadata.lire.imageanalysis.AutoColorCorrelogram;
 import net.semanticmetadata.lire.imageanalysis.CEDD;
 import net.semanticmetadata.lire.imageanalysis.ColorLayout;
@@ -21,50 +16,9 @@ import net.semanticmetadata.lire.imageanalysis.FCTH;
 import net.semanticmetadata.lire.imageanalysis.ScalableColor;
 import net.semanticmetadata.lire.imageanalysis.Tamura;
 
-public class ExtractFeature implements Runnable {
-    private String       posPath;
-    private String       negPath;
-    private String       featurefilepath;
-    private String       pos;
-    private boolean      runFlag = true;
-    private TrainHelper  th;
-    private JProgressBar proBar;
+public class ExtractFeature {
 
     public ExtractFeature() {}
-
-    public ExtractFeature(String posPath, String negPath, String feature, String pos, JProgressBar proBar) {
-        this.posPath = posPath;
-        this.negPath = negPath;
-        this.featurefilepath = feature;
-        this.pos = pos;
-        this.proBar = proBar;
-    }
-
-    public void setCallback(TrainHelper th) {
-        this.th = th;
-    }
-
-    public String[] getImgFilelist(String foldpath) {
-        List<String> list = new ArrayList<String>();
-        File dir = new File(foldpath);
-        File[] imgs = dir.listFiles(new FilenameFilter() {
-            public boolean accept(File dir, String name) {
-                return name.toLowerCase().endsWith("bmp") || name.toLowerCase().endsWith("jpg");
-            }
-        });
-        if (imgs.length > 0) {
-            for (int j = 0; j < imgs.length; j++) {
-                list.add(imgs[j].getAbsolutePath());
-            }
-
-            String strings[] = new String[list.size()];
-            for (int i = 0, j = list.size(); i < j; i++)
-                strings[i] = list.get(i);
-
-            return strings;
-        } else
-            return null;
-    }
 
     // 提取一个图像的特征
     public String extractIMGfeature(BufferedImage subimg) {
@@ -159,77 +113,5 @@ public class ExtractFeature implements Runnable {
             result = result + " " + Integer.toString(i + 1) + ":" + temp;
         }
         return result;
-    }
-
-    public void extractFoldfeature() {
-        proBar.setValue(0);
-        String posClass = Character.toString(pos.charAt(0));
-        BufferedWriter outFile = null;
-        try {
-            outFile = new BufferedWriter(new FileWriter(featurefilepath));
-        } catch (IOException e) {
-            e.printStackTrace();
-            return;
-        }
-        try {
-            String[] posImageList = getImgFilelist(posPath);
-            String[] negImageList = getImgFilelist(negPath);
-            int imgNums = posImageList.length + negImageList.length;
-            int curImg = 0;
-            proBar.setMaximum(imgNums);
-            if (posImageList.length > 0) {
-                for (int j = 0; j < posImageList.length && runFlag; j++) {
-                    String features = extractIMGfeature(posImageList[j]);
-                    String featurestr = posClass + " " + features;
-                    outFile.write(featurestr + "\n");
-                    System.out.println(featurestr);
-                    curImg += 1;
-                    proBar.setValue(curImg);
-                }
-            }
-            if (negImageList.length > 0) {
-                for (int j = 0; j < negImageList.length && runFlag; j++) {
-                    String features = extractIMGfeature(negImageList[j]);
-                    String featurestr = "0 " + features;
-                    outFile.write(featurestr + "\n");
-                    System.out.println(featurestr);
-                    curImg += 1;
-                    proBar.setValue(curImg);
-                }
-            }
-            outFile.close();
-        } catch (Exception e) {
-            try {
-                outFile.close();
-            } catch (IOException e1) {
-                e1.printStackTrace();
-            }
-            e.printStackTrace();
-        }
-    }
-
-    @Override
-    public void run() {
-        if (th == null) {
-            return;
-        }
-        BufferedWriter outFile = null;
-        try {
-            outFile = new BufferedWriter(new FileWriter(featurefilepath));
-        } catch (IOException e) {
-            e.printStackTrace();
-            return;
-        }
-        extractFoldfeature();
-        try {
-            outFile.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        th.featExtrCallback(TrainHelper.FEATURES_EXTRACTED, proBar);
-    }
-
-    public void setRunFlag(boolean status) {
-        runFlag = status;
     }
 }
