@@ -456,7 +456,7 @@ public class MainPanel extends JFrame {
     private void finalSettings() {
         this.setContentPane(container);
         setSize(500, 500);
-        setTitle("主界面");
+        setTitle("输电线路智能监控验证系统");
         setVisible(true);
         setResizable(true);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
